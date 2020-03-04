@@ -1,23 +1,13 @@
-import * as React from 'react';
+import useSelect from "./useSelect";
+import useList from "./useList";
+import useEphemeralString from "./useEphemeralString";
+import useFilterInput from "./useFilterInput";
+import useHandleKeydown from "./useHandleKeydown";
 
-export const useMyHook = () => {
-  let [{
-    counter
-  }, setState] = React.useState<{
-    counter: number;
-  }>({
-    counter: 0
-  });
-
-  React.useEffect(() => {
-    let interval = window.setInterval(() => {
-      counter++;
-      setState({counter})
-    }, 1000)
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, []);
-
-  return counter;
+export {
+  useSelect,
+  useList,
+  useEphemeralString,
+  useFilterInput,
+  useHandleKeydown
 };
