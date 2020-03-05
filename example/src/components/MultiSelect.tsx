@@ -2,38 +2,29 @@ import React, { useState } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
 
-interface ISelectedItemProps<T> {
-  item: T;
-  itemDisplayValue(item: T): string;
-  onRemove(item: T): void;
+type Item = {
+  name: string;
+};
+
+interface ISelectedItemProps {
+  item: Item;
+  onRemove(item: Item): void;
 }
 
-function SelectedItem({
-  item,
-  itemDisplayValue,
-  onRemove
-}: ISelectedItemProps<object>) {
+function SelectedItem({ item, onRemove }: ISelectedItemProps) {
   return (
     <span className="mr-3">
-      {itemDisplayValue(item)}
+      {item.name}
       <span onClick={() => onRemove(item)}>x</span>
     </span>
   );
 }
 
-type Item = {
-  name: string;
-};
-
 interface IMultiSelectProps {
   items: Array<Item>;
-  itemDisplayValue?(item: Item): string;
 }
 
-function MultiSelect({
-  items,
-  itemDisplayValue = item => item.name
-}: IMultiSelectProps) {
+function MultiSelect({ items }: IMultiSelectProps) {
   const [selected, setSelected] = useState([items[0]]);
 
   function handleSelectOption(item: any) {
@@ -48,6 +39,12 @@ function MultiSelect({
     setSelected(selected.filter(selectedItem => selectedItem !== item));
   }
 
+  function itemMatchesFilter(item: any, filterString: string) {
+    return (
+      item.name.toLowerCase().indexOf(filterString.trim().toLowerCase()) > -1
+    );
+  }
+
   const {
     isOpen,
     filteredItems,
@@ -60,8 +57,8 @@ function MultiSelect({
     isItemSelected
   } = useSelect({
     onSelectOption: handleSelectOption,
+    itemMatchesFilter,
     items,
-    itemDisplayValue,
     selected
   });
 
@@ -77,7 +74,6 @@ function MultiSelect({
               key={item.name}
               onRemove={handleRemoveSelectedItem}
               item={item}
-              itemDisplayValue={itemDisplayValue}
             />
           ))}
         </div>
@@ -105,7 +101,7 @@ function MultiSelect({
                   "bg-blue-500": isItemSelected(item)
                 })}
               >
-                {itemDisplayValue(item.item)}
+                {item.item.name}
               </li>
             ))}
           </ul>

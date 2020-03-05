@@ -6,25 +6,40 @@ type Item = {
   name: string;
 };
 
-interface ISelectProps {
+interface IFilterableSelectProps {
   items: Array<Item>;
 }
 
-function Select({ items }: ISelectProps) {
+function FilterableSelect({ items }: IFilterableSelectProps) {
   const [selected, setSelected] = useState(items[0]);
+  const [filterString, setFilterString] = useState("");
+
+  function itemMatchesFilter(item: any, filterString: string) {
+    return (
+      item.name.toLowerCase().indexOf(filterString.trim().toLowerCase()) > -1
+    );
+  }
+
+  function handleChangeFilter(filterString: string) {
+    setFilterString(filterString);
+  }
 
   const {
     isOpen,
     filteredItems,
     getItemProps,
     getListProps,
+    getFilterInputProps,
     getSelectProps,
     getTriggerProps,
     isItemActive,
     isItemSelected
   } = useSelect({
     onSelectOption: setSelected,
+    onChangeFilter: handleChangeFilter,
+    filterString,
     items,
+    itemMatchesFilter,
     selected
   });
 
@@ -39,9 +54,14 @@ function Select({ items }: ISelectProps) {
       </div>
       {isOpen && (
         <div className="flex flex-col max-w-sm shadow-lg h-48 border border-gray-500 outline-none">
+          <input
+            {...getFilterInputProps()}
+            className="outline-none"
+            type="text"
+            placeholder="Filter..."
+          />
           <ul
             {...getListProps()}
-            // TODO: maybe include relative position in a style attribute
             className="overflow-y-auto flex-grow outline-none relative"
           >
             {filteredItems.map((item: any) => (
@@ -62,4 +82,4 @@ function Select({ items }: ISelectProps) {
   );
 }
 
-export default Select;
+export default FilterableSelect;

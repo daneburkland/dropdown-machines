@@ -8,14 +8,16 @@ type Item = {
 
 interface IFilterableSelectProps {
   items: Array<Item>;
-  itemDisplayValue?(item: Item): string;
 }
 
-function FilterableSelect({
-  items,
-  itemDisplayValue = item => item.name
-}: IFilterableSelectProps) {
+function FilterableSelect({ items }: IFilterableSelectProps) {
   const [selected, setSelected] = useState(items[0]);
+
+  function itemMatchesFilter(item: any, filterString: string) {
+    return (
+      item.name.toLowerCase().indexOf(filterString.trim().toLowerCase()) > -1
+    );
+  }
 
   const {
     isOpen,
@@ -30,7 +32,7 @@ function FilterableSelect({
   } = useSelect({
     onSelectOption: setSelected,
     items,
-    itemDisplayValue,
+    itemMatchesFilter,
     selected
   });
 
@@ -41,7 +43,7 @@ function FilterableSelect({
         {...getTriggerProps()}
         className="max-w-sm border border-gray-500 flex"
       >
-        {itemDisplayValue(selected)}
+        {selected.name}
       </div>
       {isOpen && (
         <div className="flex flex-col max-w-sm shadow-lg h-48 border border-gray-500 outline-none">
@@ -63,7 +65,7 @@ function FilterableSelect({
                   "bg-blue-500": isItemSelected(item)
                 })}
               >
-                {itemDisplayValue(item.item)}
+                {item.item.name}
               </li>
             ))}
           </ul>

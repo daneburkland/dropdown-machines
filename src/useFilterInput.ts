@@ -7,7 +7,7 @@ type KeydownMap = {
 };
 
 interface IUseFilterInput {
-  onChange(arg: string): any;
+  onChange?(arg: string): any;
   keydownMap: KeydownMap;
 }
 
@@ -18,7 +18,7 @@ function useFilterInput({ onChange, keydownMap }: IUseFilterInput) {
 
   const handleInputChange = useCallback(
     ({ target: { value } }) => {
-      onChange(value);
+      onChange && onChange(value);
     },
     [onChange]
   );

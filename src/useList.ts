@@ -20,13 +20,13 @@ export function isArray<T>(value: T | Array<T>): value is Array<T> {
 
 interface IUseList<T> {
   items: Array<T>;
-  itemDisplayValue?(item: T): string;
-  selected: Array<T> | T;
+  itemMatchesFilter?(item: T, filterString: string): boolean;
+  selected?: Array<T> | T;
   onSelectItem(item: T): any;
-  filterString: string;
-  onUpdateFilterString(arg: string): any;
-  onDeactivate: Dispatch<SetStateAction<boolean>>;
-  isOpen: boolean;
+  filterString?: string;
+  onUpdateFilterString?(arg: string): void;
+  onDeactivate?: Dispatch<SetStateAction<boolean>>;
+  isOpen?: boolean;
 }
 
 type DecoratedItem<RefT, I> = {
@@ -36,7 +36,7 @@ type DecoratedItem<RefT, I> = {
 
 function useList<T>({
   items,
-  itemDisplayValue = () => "",
+  itemMatchesFilter,
   filterString = "",
   onUpdateFilterString,
   onDeactivate,
@@ -48,27 +48,42 @@ function useList<T>({
 
   const [activeItem, setActiveItem] = useState(items[0]);
 
-  const filteredDecoratedItems = useMemo(() => {
-    return items.reduce((filtered: Array<DecoratedItem<any, T>>, item) => {
-      const matchesFilter =
-        itemDisplayValue(item)
-          .toLowerCase()
-          .indexOf(filterString.trim().toLowerCase()) > -1;
+  const decoratedItems = useMemo(() => {
+    return items.map(item => ({ item, ref: createRef<HTMLElement>() }));
+  }, [items]);
 
-      if (matchesFilter) {
-        const decoratedItem = { item, ref: createRef<HTMLElement>() };
-        filtered.push(decoratedItem);
-      }
-      return filtered;
-    }, []);
-  }, [filterString, items, itemDisplayValue]);
+  const defaultItemMatchesFilterString = useCallback(
+    (item: DecoratedItem<any, T>, filterString: string) => {
+      if (!item.ref.current) return false;
+      return (
+        item.ref.current.innerHTML
+          .toLowerCase()
+          .indexOf(filterString.trim().toLocaleLowerCase()) > -1
+      );
+    },
+    []
+  );
+
+  const filteredDecoratedItems = useMemo(() => {
+    const willFilter = !!filterString;
+    if (willFilter) {
+      return decoratedItems.filter(decoratedItem => {
+        if (!!itemMatchesFilter) {
+          return itemMatchesFilter(decoratedItem.item, filterString);
+        } else {
+          return defaultItemMatchesFilterString(decoratedItem, filterString);
+        }
+      });
+    }
+    return decoratedItems;
+  }, [filterString, items, itemMatchesFilter]);
 
   const activeItemIndex = useMemo(() => {
-    const activeDecoratedItem = filteredDecoratedItems.find(
+    const activeDecoratedItem = decoratedItems.find(
       ({ item }) => item === activeItem
     );
-    return filteredDecoratedItems.indexOf(activeDecoratedItem!);
-  }, [filteredDecoratedItems, activeItem]);
+    return decoratedItems.indexOf(activeDecoratedItem!);
+  }, [decoratedItems, activeItem]);
 
   const adjustScroll = useCallback(
     ({ ref: activeItemRef }) => {
@@ -135,17 +150,18 @@ function useList<T>({
 
   const handleUpdateKeyboardFocused = useCallback(
     string => {
-      const match = filteredDecoratedItems.find(
-        ({ item }) =>
-          itemDisplayValue(item)
-            .toLowerCase()
-            .indexOf(string.trim().toLowerCase()) > -1
-      );
-      if (match) {
-        setActiveItem(match.item);
+      const firstMatch = filteredDecoratedItems.find(decoratedItem => {
+        if (itemMatchesFilter) {
+          return itemMatchesFilter(decoratedItem.item, string);
+        } else {
+          return defaultItemMatchesFilterString(decoratedItem, string);
+        }
+      });
+      if (firstMatch) {
+        setActiveItem(firstMatch.item);
       }
     },
-    [filteredDecoratedItems, itemDisplayValue]
+    [filteredDecoratedItems, itemMatchesFilter]
   );
 
   const { handleKeyboardEvent } = useEphemeralString({
@@ -222,6 +238,7 @@ function useList<T>({
   const focusableKeydownMap = useMemo(
     () => ({
       ...baseKeydownMap,
+      // TODO: this seems like more of a select thing
       default: handleKeyboardEvent
     }),
     [handleKeyboardEvent, baseKeydownMap]
@@ -263,6 +280,7 @@ function useList<T>({
     isFilterable,
     activeItem,
     focusableKeydownMap,
+    baseKeydownMap,
     handleKeyDown,
     listRef
   };
