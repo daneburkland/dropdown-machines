@@ -23,13 +23,16 @@ function Select({ items }: ISelectProps) {
 
   function itemMatchesFilter(item: any, filterString: string) {
     return (
-      item.name.toLowerCase().indexOf(filterString.trim().toLowerCase()) > -1
+      item.name
+        .toLowerCase()
+        .substring(0, filterString.length)
+        .indexOf(filterString.toLowerCase()) > -1
     );
   }
 
   const {
     isOpen,
-    filteredItems,
+    decoratedItems,
     getItemProps,
     getListProps,
     getComboboxProps,
@@ -55,7 +58,7 @@ function Select({ items }: ISelectProps) {
           {...getListProps()}
           className="overflow-y-auto flex-grow outline-none max-w-sm shadow-lg h-48 border border-gray-500 outline-none relative"
         >
-          {filteredItems.map((item: any) => (
+          {decoratedItems.map((item: any) => (
             <li
               {...getItemProps(item)}
               className={classnames({

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
 
@@ -10,29 +10,43 @@ interface IFilterableSelectProps {
   items: Array<Item>;
 }
 
-function FilterableSelect({ items }: IFilterableSelectProps) {
+// uncontrolled filterString, uncontrolled filtering
+function UncontrolledFilterStringUncontrolledFilterableSelect({
+  items
+}: IFilterableSelectProps) {
   const [selected, setSelected] = useState(items[0]);
+  const [filteredItems, setFilteredItems] = useState(items);
 
-  function itemMatchesFilter(item: any, filterString: string) {
+  const itemMatchesFilter = useCallback((item: any, filterString: string) => {
     return (
       item.name.toLowerCase().indexOf(filterString.trim().toLowerCase()) > -1
     );
-  }
+  }, []);
+
+  const handleChangeFilter = useCallback(
+    filterString => {
+      const filteredItems = items.filter(item =>
+        itemMatchesFilter(item, filterString)
+      );
+      setFilteredItems(filteredItems);
+    },
+    [items, itemMatchesFilter]
+  );
 
   const {
     isOpen,
-    filteredItems,
     getItemProps,
     getListProps,
     getFilterInputProps,
     getSelectProps,
     getTriggerProps,
     isItemActive,
-    isItemSelected
+    isItemSelected,
+    decoratedItems
   } = useSelect({
     onSelectOption: setSelected,
-    items,
-    itemMatchesFilter,
+    items: filteredItems,
+    onChangeFilter: handleChangeFilter,
     selected
   });
 
@@ -57,7 +71,7 @@ function FilterableSelect({ items }: IFilterableSelectProps) {
             {...getListProps()}
             className="overflow-y-auto flex-grow outline-none relative"
           >
-            {filteredItems.map((item: any) => (
+            {decoratedItems.map((item: any) => (
               <li
                 {...getItemProps(item)}
                 className={classnames({
@@ -75,4 +89,4 @@ function FilterableSelect({ items }: IFilterableSelectProps) {
   );
 }
 
-export default FilterableSelect;
+export default UncontrolledFilterStringUncontrolledFilterableSelect;

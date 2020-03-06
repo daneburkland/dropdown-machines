@@ -4,6 +4,7 @@ import { useSelect } from "use-dropdown";
 
 type Item = {
   name: string;
+  id: number;
 };
 
 interface ISelectedItemProps {
@@ -47,7 +48,7 @@ function MultiSelect({ items }: IMultiSelectProps) {
 
   const {
     isOpen,
-    filteredItems,
+    decoratedItems,
     getItemProps,
     getListProps,
     getFilterInputProps,
@@ -71,7 +72,7 @@ function MultiSelect({ items }: IMultiSelectProps) {
         <div className="flex-grow">
           {selected.map(item => (
             <SelectedItem
-              key={item.name}
+              key={item.id}
               onRemove={handleRemoveSelectedItem}
               item={item}
             />
@@ -93,9 +94,10 @@ function MultiSelect({ items }: IMultiSelectProps) {
             {...getListProps()}
             className="overflow-y-auto flex-grow outline-none relative"
           >
-            {filteredItems.map((item: any) => (
+            {decoratedItems.map((item: any, index) => (
               <li
                 {...getItemProps(item)}
+                key={item.id || index}
                 className={classnames({
                   "bg-gray-300": isItemActive(item),
                   "bg-blue-500": isItemSelected(item)

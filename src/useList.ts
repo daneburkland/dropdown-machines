@@ -45,15 +45,15 @@ function useList<T>({
     return items.map(item => ({ item, ref: createRef<HTMLElement>() }));
   }, [items]);
 
-  const defaultItemDisplayValue = useCallback(item => {
-    return item.ref.current?.innerHTML.toLowerCase();
+  const defaultItemDisplayValue = useCallback(decoratedItem => {
+    return decoratedItem.ref.current?.innerHTML.toLowerCase();
   }, []);
 
   const defaultItemMatchesFilterString = useCallback(
-    (item: DecoratedItem<any, T>, filterString: string) => {
-      if (!item.ref.current) return false;
+    (decoratedItem: DecoratedItem<any, T>, filterString: string) => {
+      if (!decoratedItem.ref.current) return false;
       return (
-        defaultItemDisplayValue(item).indexOf(
+        defaultItemDisplayValue(decoratedItem).indexOf(
           filterString.toLocaleLowerCase()
         ) > -1
       );
@@ -67,9 +67,11 @@ function useList<T>({
       return decoratedItems.filter(decoratedItem => {
         if (!!itemMatchesFilter) {
           return itemMatchesFilter(decoratedItem.item, filterString);
-        } else {
-          return defaultItemMatchesFilterString(decoratedItem, filterString);
         }
+        return true;
+        // else {
+        //   return defaultItemMatchesFilterString(decoratedItem, filterString);
+        // }
       });
     }
     return decoratedItems;
@@ -127,9 +129,9 @@ function useList<T>({
       newActiveItemIndex = activeItemIndex + 1;
     }
 
-    const decoratedActiveItem = filteredDecoratedItems[newActiveItemIndex];
-    setActiveItem(decoratedActiveItem.item);
-    adjustScroll(decoratedActiveItem);
+    const activeDecoratedItem = filteredDecoratedItems[newActiveItemIndex];
+    setActiveItem(activeDecoratedItem.item);
+    adjustScroll(activeDecoratedItem);
   }, [activeItemIndex, filteredDecoratedItems, adjustScroll]);
 
   const decrementActiveItem = useCallback(() => {
@@ -141,9 +143,9 @@ function useList<T>({
       newActiveItemIndex = activeItemIndex - 1;
     }
 
-    const decoratedActiveItem = filteredDecoratedItems[newActiveItemIndex];
-    setActiveItem(decoratedActiveItem.item);
-    adjustScroll(decoratedActiveItem);
+    const activeDecoratedItem = filteredDecoratedItems[newActiveItemIndex];
+    setActiveItem(activeDecoratedItem.item);
+    adjustScroll(activeDecoratedItem);
   }, [activeItemIndex, filteredDecoratedItems, adjustScroll]);
 
   const isItemActive = useCallback(
@@ -154,11 +156,11 @@ function useList<T>({
   );
 
   const isItemSelected = useCallback(
-    decoratedItem => {
+    item => {
       if (isArray(selected)) {
-        return selected.includes(decoratedItem.item);
+        return selected.includes(item);
       } else {
-        return decoratedItem.item === selected;
+        return item === selected;
       }
     },
     [selected]
@@ -169,12 +171,12 @@ function useList<T>({
   }, []);
 
   const getItemProps = useCallback(
-    ({ item, ref }) => {
+    decoratedItem => {
+      const { item, ref } = decoratedItem;
       return {
         ref,
-        key: item.id,
         onMouseMove: () => handleMouseMove(item),
-        onClick: () => onSelectItem(item)
+        onClick: () => onSelectItem(decoratedItem.item)
       };
     },
     [handleMouseMove, onSelectItem]
@@ -186,8 +188,13 @@ function useList<T>({
     };
   }, []);
 
+  const activeDecoratedItem = useMemo(
+    () => filteredDecoratedItems[activeItemIndex],
+    [filteredDecoratedItems, activeItemIndex]
+  );
+
   return {
-    items: filteredDecoratedItems,
+    decoratedItems: filteredDecoratedItems,
     getItemProps,
     getListProps,
     isItemActive,
@@ -198,7 +205,8 @@ function useList<T>({
     decrementActiveItem,
     incrementActiveItem,
     defaultItemMatchesFilterString,
-    defaultItemDisplayValue
+    defaultItemDisplayValue,
+    activeDecoratedItem
   };
 }
 

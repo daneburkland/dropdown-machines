@@ -10,7 +10,10 @@ interface IFilterableSelectProps {
   items: Array<Item>;
 }
 
-function FilterableSelect({ items }: IFilterableSelectProps) {
+// controlled filterString, uncontrolled filtering
+function ControlledFilterStringUncontrolledFilteringSelect({
+  items
+}: IFilterableSelectProps) {
   const [selected, setSelected] = useState(items[0]);
   const [filterString, setFilterString] = useState("");
 
@@ -26,7 +29,7 @@ function FilterableSelect({ items }: IFilterableSelectProps) {
 
   const {
     isOpen,
-    filteredItems,
+    decoratedItems,
     getItemProps,
     getListProps,
     getFilterInputProps,
@@ -64,7 +67,7 @@ function FilterableSelect({ items }: IFilterableSelectProps) {
             {...getListProps()}
             className="overflow-y-auto flex-grow outline-none relative"
           >
-            {filteredItems.map((item: any) => (
+            {decoratedItems.map((item: any) => (
               <li
                 {...getItemProps(item)}
                 className={classnames({
@@ -82,4 +85,4 @@ function FilterableSelect({ items }: IFilterableSelectProps) {
   );
 }
 
-export default FilterableSelect;
+export default ControlledFilterStringUncontrolledFilteringSelect;

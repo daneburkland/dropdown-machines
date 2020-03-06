@@ -6,18 +6,28 @@ type Item = {
   name: string;
 };
 
-interface ISelectProps {
+interface IFilterableSelectProps {
   items: Array<Item>;
 }
 
-function Select({ items }: ISelectProps) {
+// uncontrolled filterString, uncontrolled filtering
+function UncontrolledFilterStringUncontrolledFilterableSelect({
+  items
+}: IFilterableSelectProps) {
   const [selected, setSelected] = useState(items[0]);
+
+  function itemMatchesFilter(item: any, filterString: string) {
+    return (
+      item.name.toLowerCase().indexOf(filterString.trim().toLowerCase()) > -1
+    );
+  }
 
   const {
     isOpen,
     decoratedItems,
     getItemProps,
     getListProps,
+    getFilterInputProps,
     getSelectProps,
     getTriggerProps,
     isItemActive,
@@ -25,6 +35,7 @@ function Select({ items }: ISelectProps) {
   } = useSelect({
     onSelectOption: setSelected,
     items,
+    itemMatchesFilter,
     selected
   });
 
@@ -39,15 +50,19 @@ function Select({ items }: ISelectProps) {
       </div>
       {isOpen && (
         <div className="flex flex-col max-w-sm shadow-lg h-48 border border-gray-500 outline-none">
+          <input
+            {...getFilterInputProps()}
+            className="outline-none"
+            type="text"
+            placeholder="Filter..."
+          />
           <ul
             {...getListProps()}
-            // TODO: maybe include relative position in a style attribute
             className="overflow-y-auto flex-grow outline-none relative"
           >
-            {decoratedItems.map((item: any, index: number) => (
+            {decoratedItems.map((item: any) => (
               <li
                 {...getItemProps(item)}
-                key={item.id || index}
                 className={classnames({
                   "bg-gray-300": isItemActive(item),
                   "bg-blue-500": isItemSelected(item)
@@ -63,4 +78,4 @@ function Select({ items }: ISelectProps) {
   );
 }
 
-export default Select;
+export default UncontrolledFilterStringUncontrolledFilterableSelect;

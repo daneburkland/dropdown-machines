@@ -66,7 +66,7 @@ function useSelect({
   );
 
   const {
-    items: filteredItems,
+    decoratedItems,
     getItemProps,
     getListProps,
     isItemActive,
@@ -92,17 +92,10 @@ function useSelect({
     [handleClickTrigger]
   );
 
-  const handleKeydownSpaceFilterInput = useCallback(() => {
-    if (!filterString.length) {
-      handleSelectOption(activeItem);
-    } else return;
-  }, [filterString, activeItem, handleSelectOption]);
-
   const filterInputKeydownMap = useMemo(
     () => ({
       up: decrementActiveItem,
       down: incrementActiveItem,
-      space: handleKeydownSpaceFilterInput,
       enter: () => handleSelectOption(activeItem),
       esc: close
     }),
@@ -117,7 +110,7 @@ function useSelect({
 
   const handleUpdateKeyboardFocused = useCallback(
     string => {
-      const firstMatch = filteredItems.find(decoratedItem => {
+      const firstMatch = decoratedItems.find(decoratedItem => {
         if (itemMatchesFilter) {
           return itemMatchesFilter(decoratedItem.item, string);
         } else {
@@ -128,7 +121,7 @@ function useSelect({
         setActiveItem(firstMatch.item);
       }
     },
-    [filteredItems, itemMatchesFilter]
+    [decoratedItems, itemMatchesFilter]
   );
 
   const { handleKeyboardEvent } = useEphemeralString({
@@ -183,7 +176,7 @@ function useSelect({
   return {
     isOpen,
     listRef,
-    filteredItems,
+    decoratedItems,
     getItemProps,
     getListProps,
     getFilterInputProps,

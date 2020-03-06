@@ -1,7 +1,8 @@
 import React from "react";
 import Select from "./components/Select";
-import FilterableSelect from "./components/FilterableSelect";
-import FilterableControlledSelect from "./components/FilterableControlledSelect";
+import UncontrolledFilterStringUncontrolledFilteringSelect from "./components/UncontrolledFilterStringUncontrolledFilteringSelect";
+import ControlledFilterStringUncontrolledFilteringSelect from "./components/ControlledFilterStringUncontrolledFilteringSelect";
+import UncontrolledFilterStringControlledFilteringSelect from "./components/UncontrolledFilterStringControlledFilteringSelect";
 import MultiSelect from "./components/MultiSelect";
 import Combobox from "./components/Combobox";
 import ComboboxAutoSelect from "./components/ComboboxAutoSelect";
@@ -15,17 +16,21 @@ function App() {
       <div className="m-4">
         <Select items={items} />
       </div>
-      <h3>Filterable, Uncontrolled Select</h3>
+      <h3>Uncontrolled filterString; uncontrolled filtering select</h3>
       <div className="m-4">
-        <FilterableSelect items={items} />
+        <UncontrolledFilterStringUncontrolledFilteringSelect items={items} />
+      </div>
+      <h3>Controlled filterString; uncontrolled filtering select</h3>
+      <div className="m-4">
+        <ControlledFilterStringUncontrolledFilteringSelect items={items} />
+      </div>
+      <h3>Uncontrolled filterString; controlled filtering select</h3>
+      <div className="m-4">
+        <UncontrolledFilterStringControlledFilteringSelect items={items} />
       </div>
       <h3>Filterable, Uncontrolled Multi-Select</h3>
       <div className="m-4">
         <MultiSelect items={items} />
-      </div>
-      <h3>Filterable, Controlled Select</h3>
-      <div className="m-4">
-        <FilterableControlledSelect items={items} />
       </div>
       <h3>Combobox</h3>
       <div className="m-4">

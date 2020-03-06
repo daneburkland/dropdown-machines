@@ -48,12 +48,11 @@ function useCombobox({
   const prevAutocompleteStem = usePrevious(autoCompleteStem) || "";
 
   const onSelectOption = useCallback(
-    item => {
+    decoratedItem => {
       if (!!onSelectControlledOption) {
-        onSelectControlledOption(item);
+        onSelectControlledOption(decoratedItem.item);
       } else {
-        console.log(item);
-        setUncontrolledValue(defaultItemDisplayValue(item));
+        setUncontrolledValue(defaultItemDisplayValue(decoratedItem));
       }
       onSelectControlledOption || setUncontrolledValue;
     },
@@ -67,21 +66,22 @@ function useCombobox({
   }, [comboboxRef.current, setIsOpen, setActiveItem]);
 
   const handleSelectOption = useCallback(
-    option => {
-      onSelectOption(option);
+    activeDecoratedItem => {
+      onSelectOption(activeDecoratedItem);
       close();
     },
     [close, onSelectOption]
   );
 
   const {
-    items: filteredItems,
+    decoratedItems,
     getItemProps,
     getListProps,
     isItemActive,
     decrementActiveItem,
     incrementActiveItem,
-    defaultItemDisplayValue
+    defaultItemDisplayValue,
+    activeDecoratedItem
   } = useList({
     items,
     activeItem,
@@ -98,8 +98,8 @@ function useCombobox({
   );
 
   const hasMatches = useMemo(() => {
-    return !!value && !!filteredItems.length;
-  }, [value, filteredItems.length]);
+    return !!value && !!decoratedItems.length;
+  }, [value, decoratedItems.length]);
 
   useEffect(() => {
     if (hasMatches && isFocused) {
@@ -121,18 +121,23 @@ function useCombobox({
 
   const handleKeydownTab = useCallback(() => {
     if (activeItem && autoSelect) {
-      handleSelectOption(activeItem);
+      handleSelectOption(activeDecoratedItem);
     }
-  }, [activeItem, autoSelect, handleSelectOption]);
+  }, [activeDecoratedItem, autoSelect, handleSelectOption]);
 
   const comboboxKeydownMap = useMemo(
     () => ({
       up: decrementActiveItem,
       down: incrementActiveItem,
-      enter: () => handleSelectOption(activeItem),
+      enter: () => handleSelectOption(activeDecoratedItem),
       tab: handleKeydownTab
     }),
-    [decrementActiveItem, incrementActiveItem, activeItem, handleSelectOption]
+    [
+      decrementActiveItem,
+      incrementActiveItem,
+      activeDecoratedItem,
+      handleSelectOption
+    ]
   );
 
   const { handleKeyDown } = useHandleKeydown(comboboxKeydownMap);
@@ -142,11 +147,11 @@ function useCombobox({
   }, [prevValue, value, autoCompleteStem]);
 
   useEffect(() => {
-    if (activeItem && inlineAutoComplete && !!filteredItems.length) {
+    if (activeItem && inlineAutoComplete && !!decoratedItems.length) {
       if (value === autoCompleteStem && didBackspace) {
         return;
       }
-      const newAutoCompleteValue = defaultItemDisplayValue(filteredItems[0]);
+      const newAutoCompleteValue = defaultItemDisplayValue(decoratedItems[0]);
       setUncontrolledValue(newAutoCompleteValue);
     }
   }, [activeItem, value, didBackspace]);
@@ -183,7 +188,7 @@ function useCombobox({
   return {
     setIsOpen,
     isOpen,
-    filteredItems,
+    decoratedItems,
     getItemProps,
     getListProps,
     getComboboxProps,
