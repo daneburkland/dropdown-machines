@@ -35,11 +35,11 @@ function Select({ items }: ISelectProps) {
     getComboboxProps,
     isItemActive
   } = useCombobox({
-    onSelectOption: handleSelectOption,
+    items,
+    value,
     onUpdateValue: handleUpdateValue,
     itemMatchesFilter,
-    items,
-    value
+    onSelectOption: handleSelectOption
   });
 
   return (

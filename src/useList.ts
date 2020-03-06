@@ -4,15 +4,9 @@ import {
   useRef,
   createRef,
   useCallback,
-  useEffect,
-  SetStateAction,
   RefObject,
-  Dispatch
+  useEffect
 } from "react";
-import useHandleKeydown from "./useHandleKeydown";
-import useEphemeralString from "./useEphemeralString";
-import useFilterInput from "./useFilterInput";
-// import { isArray } from "./utils";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
@@ -22,14 +16,12 @@ interface IUseList<T> {
   items: Array<T>;
   itemMatchesFilter?(item: T, filterString: string): boolean;
   selected?: Array<T> | T;
-  onSelectItem(item: T): any;
   filterString?: string;
-  onUpdateFilterString?(arg: string): void;
-  onDeactivate?: Dispatch<SetStateAction<boolean>>;
-  isOpen?: boolean;
+  onSelectItem(item: T): void;
+  autoActivateFirstResult?: boolean;
 }
 
-type DecoratedItem<RefT, I> = {
+export type DecoratedItem<RefT, I> = {
   ref: RefObject<RefT>;
   item: I;
 };
@@ -38,15 +30,15 @@ function useList<T>({
   items,
   itemMatchesFilter,
   filterString = "",
-  onUpdateFilterString,
-  onDeactivate,
-  onSelectItem,
   selected,
-  isOpen
+  onSelectItem,
+  autoActivateFirstResult
 }: IUseList<T>) {
   const listRef = useRef<HTMLUListElement>(null);
 
-  const [activeItem, setActiveItem] = useState(items[0]);
+  // I should probably move this out into parents
+  const [activeItem, setActiveItem] = useState<null | T>(null);
+  console.log(activeItem);
 
   const decoratedItems = useMemo(() => {
     return items.map(item => ({ item, ref: createRef<HTMLElement>() }));
@@ -58,7 +50,7 @@ function useList<T>({
       return (
         item.ref.current.innerHTML
           .toLowerCase()
-          .indexOf(filterString.trim().toLocaleLowerCase()) > -1
+          .indexOf(filterString.toLocaleLowerCase()) > -1
       );
     },
     []
@@ -78,12 +70,20 @@ function useList<T>({
     return decoratedItems;
   }, [filterString, items, itemMatchesFilter]);
 
+  useEffect(() => {
+    if (autoActivateFirstResult && !!filteredDecoratedItems.length) {
+      setActiveItem(filteredDecoratedItems[0].item);
+    } else if (!filteredDecoratedItems.length) {
+      setActiveItem(null);
+    }
+  }, [filterString]);
+
   const activeItemIndex = useMemo(() => {
-    const activeDecoratedItem = decoratedItems.find(
+    const activeDecoratedItem = filteredDecoratedItems.find(
       ({ item }) => item === activeItem
     );
-    return decoratedItems.indexOf(activeDecoratedItem!);
-  }, [decoratedItems, activeItem]);
+    return filteredDecoratedItems.indexOf(activeDecoratedItem!);
+  }, [filteredDecoratedItems, activeItem]);
 
   const adjustScroll = useCallback(
     ({ ref: activeItemRef }) => {
@@ -141,33 +141,6 @@ function useList<T>({
     adjustScroll(decoratedActiveItem);
   }, [activeItemIndex, filteredDecoratedItems, adjustScroll]);
 
-  const handleSelectItem = useCallback(
-    item => {
-      onSelectItem(item);
-    },
-    [onSelectItem]
-  );
-
-  const handleUpdateKeyboardFocused = useCallback(
-    string => {
-      const firstMatch = filteredDecoratedItems.find(decoratedItem => {
-        if (itemMatchesFilter) {
-          return itemMatchesFilter(decoratedItem.item, string);
-        } else {
-          return defaultItemMatchesFilterString(decoratedItem, string);
-        }
-      });
-      if (firstMatch) {
-        setActiveItem(firstMatch.item);
-      }
-    },
-    [filteredDecoratedItems, itemMatchesFilter]
-  );
-
-  const { handleKeyboardEvent } = useEphemeralString({
-    onUpdateValue: handleUpdateKeyboardFocused
-  });
-
   const isItemActive = useCallback(
     decoratedItem => {
       return decoratedItem.item === activeItem;
@@ -196,62 +169,11 @@ function useList<T>({
         ref,
         key: item.id,
         onMouseMove: () => handleMouseMove(item),
-        onClick: () => handleSelectItem(item)
+        onClick: () => onSelectItem(item)
       };
     },
-    [handleMouseMove, handleSelectItem]
+    [handleMouseMove, onSelectItem]
   );
-
-  const baseKeydownMap = useMemo(
-    () => ({
-      up: decrementActiveItem,
-      down: incrementActiveItem,
-      enter: () => handleSelectItem(activeItem)
-    }),
-    [decrementActiveItem, incrementActiveItem, activeItem, handleSelectItem]
-  );
-
-  const handleKeydownSpace = useCallback(() => {
-    if (!filterString.length) {
-      handleSelectItem(activeItem);
-    } else return;
-  }, [filterString, activeItem, handleSelectItem]);
-
-  const filterInputKeydownMap = useMemo(
-    () => ({
-      ...baseKeydownMap,
-      space: handleKeydownSpace,
-      esc: onDeactivate
-    }),
-    [handleKeydownSpace, baseKeydownMap, onDeactivate]
-  );
-
-  const { getFilterInputProps, ref: filterInputRef } = useFilterInput({
-    onChange: onUpdateFilterString,
-    keydownMap: filterInputKeydownMap
-  });
-
-  const isFilterable = useMemo(() => !!filterInputRef.current, [
-    filterInputRef
-  ]);
-
-  const focusableKeydownMap = useMemo(
-    () => ({
-      ...baseKeydownMap,
-      // TODO: this seems like more of a select thing
-      default: handleKeyboardEvent
-    }),
-    [handleKeyboardEvent, baseKeydownMap]
-  );
-
-  const { handleKeyDown } = useHandleKeydown(focusableKeydownMap);
-
-  const getFocusableProps = useCallback(() => {
-    return {
-      tabIndex: 0,
-      onKeyDown: handleKeyDown
-    };
-  }, [handleKeyDown]);
 
   const getListProps = useCallback(() => {
     return {
@@ -259,30 +181,18 @@ function useList<T>({
     };
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      if (filterInputRef.current) {
-        filterInputRef.current.focus();
-      } else {
-        listRef.current && listRef.current.focus();
-      }
-    }
-  }, [isOpen, listRef, filterInputRef]);
-
   return {
     items: filteredDecoratedItems,
     getItemProps,
     getListProps,
-    getFocusableProps,
-    getFilterInputProps,
-    isItemSelected,
     isItemActive,
-    isFilterable,
+    isItemSelected,
     activeItem,
-    focusableKeydownMap,
-    baseKeydownMap,
-    handleKeyDown,
-    listRef
+    setActiveItem,
+    listRef,
+    decrementActiveItem,
+    incrementActiveItem,
+    defaultItemMatchesFilterString
   };
 }
 

@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import useList from "./useList";
 import useHandleKeydown from "./useHandleKeydown";
-// import { isArray } from "./utils";
+import useFilterInput from "./useFilterInput";
+import useEphemeralString from "./useEphemeralString";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
@@ -57,6 +58,7 @@ function useSelect({
   const handleSelectOption = useCallback(
     option => {
       onSelectOption(option);
+      setActiveItem(null);
       close();
     },
     [close, onSelectOption]
@@ -65,23 +67,21 @@ function useSelect({
   const {
     items: filteredItems,
     getItemProps,
-    getFilterInputProps,
     getListProps,
     isItemActive,
     isItemSelected,
     activeItem,
-    focusableKeydownMap,
-    isFilterable,
-    listRef
+    setActiveItem,
+    listRef,
+    decrementActiveItem,
+    incrementActiveItem,
+    defaultItemMatchesFilterString
   } = useList({
     items,
     filterString,
-    onUpdateFilterString: handleChangeFilter,
     itemMatchesFilter,
     selected,
-    onSelectItem: handleSelectOption,
-    onDeactivate: close,
-    isOpen
+    onSelectItem: handleSelectOption
   });
 
   const getTriggerProps = useCallback(
@@ -91,7 +91,50 @@ function useSelect({
     [handleClickTrigger]
   );
 
-  const handleKeydownSpace = useCallback(() => {
+  const handleKeydownSpaceFilterInput = useCallback(() => {
+    if (!filterString.length) {
+      handleSelectOption(activeItem);
+    } else return;
+  }, [filterString, activeItem, handleSelectOption]);
+
+  const filterInputKeydownMap = useMemo(
+    () => ({
+      up: decrementActiveItem,
+      down: incrementActiveItem,
+      space: handleKeydownSpaceFilterInput,
+      enter: () => handleSelectOption(activeItem),
+      esc: close
+    }),
+    [
+      decrementActiveItem,
+      incrementActiveItem,
+      activeItem,
+      handleSelectOption,
+      close
+    ]
+  );
+
+  const handleUpdateKeyboardFocused = useCallback(
+    string => {
+      const firstMatch = filteredItems.find(decoratedItem => {
+        if (itemMatchesFilter) {
+          return itemMatchesFilter(decoratedItem.item, string);
+        } else {
+          return defaultItemMatchesFilterString(decoratedItem, string);
+        }
+      });
+      if (firstMatch) {
+        setActiveItem(firstMatch.item);
+      }
+    },
+    [filteredItems, itemMatchesFilter]
+  );
+
+  const { handleKeyboardEvent } = useEphemeralString({
+    onUpdateValue: handleUpdateKeyboardFocused
+  });
+
+  const handleKeydownSpaceSelect = useCallback(() => {
     if (!isOpen) {
       setIsOpen(true);
     } else {
@@ -101,24 +144,42 @@ function useSelect({
 
   const selectKeydownMap = useMemo(
     () => ({
-      ...(isFilterable ? {} : focusableKeydownMap),
-      space: handleKeydownSpace,
-      esc: close
+      up: decrementActiveItem,
+      down: incrementActiveItem,
+      space: handleKeydownSpaceSelect,
+      enter: () => handleSelectOption(activeItem),
+      esc: close,
+      default: handleKeyboardEvent
     }),
-    [close, isFilterable, focusableKeydownMap, handleKeydownSpace]
+    [close, filterInputKeydownMap, handleKeydownSpaceSelect]
   );
 
-  const { handleKeyDown } = useHandleKeydown(selectKeydownMap);
+  const { getFilterInputProps, ref: filterInputRef } = useFilterInput({
+    onChange: handleChangeFilter,
+    keydownMap: filterInputKeydownMap
+  });
 
+  useEffect(() => {
+    if (isOpen) {
+      if (filterInputRef.current) {
+        filterInputRef.current.focus();
+      } else {
+        listRef.current && listRef.current.focus();
+      }
+    }
+  }, [isOpen, listRef, filterInputRef]);
+
+  const { handleKeyDown: handleKeydownSelect } = useHandleKeydown(
+    selectKeydownMap
+  );
   const getSelectProps = useCallback(() => {
     return {
       tabIndex: 0,
-      onKeyDown: handleKeyDown
+      onKeyDown: handleKeydownSelect
     };
-  }, [handleKeyDown]);
+  }, [handleKeydownSelect]);
 
   return {
-    setIsOpen,
     isOpen,
     listRef,
     filteredItems,
@@ -128,7 +189,8 @@ function useSelect({
     getSelectProps,
     getTriggerProps,
     isItemActive,
-    isItemSelected
+    isItemSelected,
+    onSelectItem: handleSelectOption
   };
 }
 
