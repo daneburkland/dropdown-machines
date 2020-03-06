@@ -5,6 +5,7 @@ import FilterableControlledSelect from "./components/FilterableControlledSelect"
 import MultiSelect from "./components/MultiSelect";
 import Combobox from "./components/Combobox";
 import ComboboxAutoSelect from "./components/ComboboxAutoSelect";
+import ComboboxInlineAutoSelect from "./components/ComboboxInlineAutoSelect";
 import items from "./items";
 
 function App() {
@@ -33,6 +34,10 @@ function App() {
       <h3>Combobox with auto select</h3>
       <div className="m-4">
         <ComboboxAutoSelect items={items} />
+      </div>
+      <h3>Combobox with inline auto select</h3>
+      <div className="m-4">
+        <ComboboxInlineAutoSelect items={items} />
       </div>
     </div>
   );

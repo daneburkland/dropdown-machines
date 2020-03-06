@@ -26,6 +26,7 @@ function useSelect({
   filterString: controlledFilterString
 }: IuseSelect<object>) {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeItem, setActiveItem] = useState(null);
   const [uncontrolledFilterString, setUncontrolledFilterString] = useState("");
   const isControlledFiltering = useMemo(() => !!controlledFilterString, [
     controlledFilterString
@@ -70,13 +71,13 @@ function useSelect({
     getListProps,
     isItemActive,
     isItemSelected,
-    activeItem,
-    setActiveItem,
     listRef,
     decrementActiveItem,
     incrementActiveItem,
     defaultItemMatchesFilterString
   } = useList({
+    activeItem,
+    setActiveItem,
     items,
     filterString,
     itemMatchesFilter,

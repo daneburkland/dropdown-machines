@@ -7,6 +7,7 @@ import {
   useRef
 } from "react";
 import useList from "./useList";
+import usePrevious from "./usePrevious";
 import useHandleKeydown from "./useHandleKeydown";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
@@ -15,29 +16,60 @@ export function isArray<T>(value: T | Array<T>): value is Array<T> {
 
 interface IUseCombobox<T> {
   items: Array<T>;
-  value: string;
+  value?: string;
   onUpdateValue?(value: string): void;
+  onSelectOption?(item: T): void;
   itemMatchesFilter?(item: T, filterString: string): boolean;
-  onSelectOption(item: T): any;
   autoSelect?: boolean;
+  inlineAutoComplete?: boolean;
 }
 
 function useCombobox({
   items,
   itemMatchesFilter,
-  value,
-  onUpdateValue,
-  onSelectOption,
-  autoSelect
+  value: controlledValue,
+  onUpdateValue: onUpdateControlledValue,
+  onSelectOption: onSelectControlledOption,
+  autoSelect,
+  inlineAutoComplete
 }: IUseCombobox<object>) {
   const [isOpen, setIsOpen] = useState(false);
+  const [uncontrolledValue, setUncontrolledValue] = useState<string>("");
+  const [activeItem, setActiveItem] = useState<null | object>(null);
+  const [autoCompleteStem, setAutoCompleteStem] = useState("");
   const comboboxRef = useRef<HTMLInputElement>(null);
+
+  // TODO: throw a warning if inlineAutoComplete and value are supplied
+  const value = useMemo(() => controlledValue || uncontrolledValue, [
+    controlledValue,
+    uncontrolledValue
+  ]);
+  const prevValue = usePrevious(value) || "";
+  const prevAutocompleteStem = usePrevious(autoCompleteStem) || "";
+
+  const onSelectOption = useCallback(
+    item => {
+      if (!!onSelectControlledOption) {
+        onSelectControlledOption(item);
+      } else {
+        console.log(item);
+        setUncontrolledValue(defaultItemDisplayValue(item));
+      }
+      onSelectControlledOption || setUncontrolledValue;
+    },
+    [onSelectControlledOption, setUncontrolledValue]
+  );
+
+  const close = useCallback(() => {
+    comboboxRef.current?.blur();
+    setIsOpen(false);
+    setActiveItem(null);
+  }, [comboboxRef.current, setIsOpen, setActiveItem]);
 
   const handleSelectOption = useCallback(
     option => {
       onSelectOption(option);
-      comboboxRef.current?.blur();
-      setIsOpen(false);
+      close();
     },
     [close, onSelectOption]
   );
@@ -49,9 +81,11 @@ function useCombobox({
     isItemActive,
     decrementActiveItem,
     incrementActiveItem,
-    activeItem
+    defaultItemDisplayValue
   } = useList({
     items,
+    activeItem,
+    setActiveItem,
     filterString: value,
     itemMatchesFilter,
     onSelectItem: handleSelectOption,
@@ -72,8 +106,18 @@ function useCombobox({
       setIsOpen(true);
     } else {
       setIsOpen(false);
+      setActiveItem(null);
     }
   }, [hasMatches, value]);
+
+  useEffect(() => {
+    if (activeItem && inlineAutoComplete) {
+      comboboxRef.current?.setSelectionRange(
+        autoCompleteStem.length,
+        value.length
+      );
+    }
+  }, [value]);
 
   const handleKeydownTab = useCallback(() => {
     if (activeItem && autoSelect) {
@@ -93,11 +137,32 @@ function useCombobox({
 
   const { handleKeyDown } = useHandleKeydown(comboboxKeydownMap);
 
+  const didBackspace = useMemo(() => {
+    return autoCompleteStem.length <= prevAutocompleteStem.length;
+  }, [prevValue, value, autoCompleteStem]);
+
+  useEffect(() => {
+    if (activeItem && inlineAutoComplete && !!filteredItems.length) {
+      if (value === autoCompleteStem && didBackspace) {
+        return;
+      }
+      const newAutoCompleteValue = defaultItemDisplayValue(filteredItems[0]);
+      setUncontrolledValue(newAutoCompleteValue);
+    }
+  }, [activeItem, value, didBackspace]);
+
   const handleChange = useCallback(
     (e: FormEvent) => {
-      onUpdateValue && onUpdateValue((<HTMLInputElement>e.target).value);
+      if (onUpdateControlledValue) {
+        onUpdateControlledValue((<HTMLInputElement>e.target).value);
+      } else {
+        if (inlineAutoComplete) {
+          setAutoCompleteStem((<HTMLInputElement>e.target).value);
+        }
+        setUncontrolledValue((<HTMLInputElement>e.target).value);
+      }
     },
-    [onUpdateValue]
+    [onUpdateControlledValue, setUncontrolledValue]
   );
 
   function handleBlur() {

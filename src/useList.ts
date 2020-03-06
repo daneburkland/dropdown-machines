@@ -1,11 +1,12 @@
 import {
-  useState,
   useMemo,
   useRef,
   createRef,
   useCallback,
   RefObject,
-  useEffect
+  useEffect,
+  Dispatch,
+  SetStateAction
 } from "react";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
@@ -19,6 +20,8 @@ interface IUseList<T> {
   filterString?: string;
   onSelectItem(item: T): void;
   autoActivateFirstResult?: boolean;
+  activeItem: T | null;
+  setActiveItem: Dispatch<SetStateAction<T | null>>;
 }
 
 export type DecoratedItem<RefT, I> = {
@@ -32,25 +35,27 @@ function useList<T>({
   filterString = "",
   selected,
   onSelectItem,
-  autoActivateFirstResult
+  autoActivateFirstResult,
+  activeItem,
+  setActiveItem
 }: IUseList<T>) {
   const listRef = useRef<HTMLUListElement>(null);
-
-  // I should probably move this out into parents
-  const [activeItem, setActiveItem] = useState<null | T>(null);
-  console.log(activeItem);
 
   const decoratedItems = useMemo(() => {
     return items.map(item => ({ item, ref: createRef<HTMLElement>() }));
   }, [items]);
 
+  const defaultItemDisplayValue = useCallback(item => {
+    return item.ref.current?.innerHTML.toLowerCase();
+  }, []);
+
   const defaultItemMatchesFilterString = useCallback(
     (item: DecoratedItem<any, T>, filterString: string) => {
       if (!item.ref.current) return false;
       return (
-        item.ref.current.innerHTML
-          .toLowerCase()
-          .indexOf(filterString.toLocaleLowerCase()) > -1
+        defaultItemDisplayValue(item).indexOf(
+          filterString.toLocaleLowerCase()
+        ) > -1
       );
     },
     []
@@ -192,7 +197,8 @@ function useList<T>({
     listRef,
     decrementActiveItem,
     incrementActiveItem,
-    defaultItemMatchesFilterString
+    defaultItemMatchesFilterString,
+    defaultItemDisplayValue
   };
 }
 
