@@ -12,8 +12,8 @@ interface IuseSelect<T> {
   items: Array<T>;
   itemMatchesFilter?(item: T, filterString: string): boolean;
   onChangeFilter?(filterString: string): void;
-  selected: T | Array<T>;
-  onSelectOption(item: T): any;
+  selected: null | T | Array<T>;
+  onSelectOption(item: null | T): void;
   filterString?: string;
   autoTargetFirstItem?: boolean;
 }
@@ -60,11 +60,13 @@ function useSelect({
 
   const handleSelectOption = useCallback(
     option => {
-      onSelectOption(option);
-      setActiveItem(null);
-      close();
+      if (isOpen) {
+        onSelectOption(option);
+        setActiveItem(null);
+        close();
+      }
     },
-    [close, onSelectOption]
+    [close, onSelectOption, isOpen]
   );
 
   const {
@@ -172,7 +174,8 @@ function useSelect({
   const getSelectProps = useCallback(() => {
     return {
       tabIndex: 0,
-      onKeyDown: handleKeydownSelect
+      onKeyDown: handleKeydownSelect,
+      "data-testid": "select"
     };
   }, [handleKeydownSelect]);
 

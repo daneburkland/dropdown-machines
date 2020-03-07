@@ -8,13 +8,15 @@ type Item = {
 
 interface IFilterableSelectProps {
   items: Array<Item>;
+  autoTargetFirstItem?: boolean;
 }
 
 // uncontrolled filterString, uncontrolled filtering
-function UncontrolledFilterStringUncontrolledFilterableSelect({
-  items
+function UncontrolledFilterStringUncontrolledFilteringSelect({
+  items,
+  autoTargetFirstItem
 }: IFilterableSelectProps) {
-  const [selected, setSelected] = useState(items[0]);
+  const [selected, setSelected] = useState<Item | null>(null);
   const [filteredItems, setFilteredItems] = useState(items);
 
   const itemMatchesFilter = useCallback((item: any, filterString: string) => {
@@ -47,7 +49,8 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
     onSelectOption: setSelected,
     items: filteredItems,
     onChangeFilter: handleChangeFilter,
-    selected
+    selected,
+    autoTargetFirstItem
   });
 
   return (
@@ -55,9 +58,9 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
       <div
         {...getSelectProps()}
         {...getTriggerProps()}
-        className="max-w-sm border border-gray-500 flex"
+        className="max-w-sm h-6 border border-gray-500 flex"
       >
-        {selected.name}
+        {!!selected ? selected.name : ""}
       </div>
       {isOpen && (
         <div className="flex flex-col max-w-sm shadow-lg h-48 border border-gray-500 outline-none">
@@ -71,9 +74,10 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
             {...getListProps()}
             className="overflow-y-auto flex-grow outline-none relative"
           >
-            {decoratedItems.map((item: any) => (
+            {decoratedItems.map((item: any, index) => (
               <li
                 {...getItemProps(item)}
+                key={item.id || index}
                 className={classnames({
                   "bg-gray-300": isItemActive(item),
                   "bg-blue-500": isItemSelected(item)
@@ -89,4 +93,4 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
   );
 }
 
-export default UncontrolledFilterStringUncontrolledFilterableSelect;
+export default UncontrolledFilterStringUncontrolledFilteringSelect;

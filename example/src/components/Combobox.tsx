@@ -11,7 +11,7 @@ interface ISelectProps {
   items: Array<Item>;
 }
 
-function Select({ items }: ISelectProps) {
+function Combobox({ items }: ISelectProps) {
   const [value, setValue] = useState("");
 
   function handleUpdateValue(value: string) {
@@ -65,4 +65,4 @@ function Select({ items }: ISelectProps) {
   );
 }
 
-export default Select;
+export default Combobox;

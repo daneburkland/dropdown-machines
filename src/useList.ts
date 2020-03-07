@@ -16,9 +16,9 @@ export function isArray<T>(value: T | Array<T>): value is Array<T> {
 interface IUseList<T> {
   items: Array<T>;
   itemMatchesFilter?(item: T, filterString: string): boolean;
-  selected?: Array<T> | T;
+  selected?: null | T | Array<T>;
   filterString?: string;
-  onSelectItem(item: T): void;
+  onSelectItem(item: T | null): void;
   autoTargetFirstItem?: boolean;
   activeItem: T | null;
   setActiveItem: Dispatch<SetStateAction<T | null>>;
@@ -69,9 +69,6 @@ function useList<T>({
           return itemMatchesFilter(decoratedItem.item, filterString);
         }
         return true;
-        // else {
-        //   return defaultItemMatchesFilterString(decoratedItem, filterString);
-        // }
       });
     }
     return decoratedItems;
@@ -176,7 +173,8 @@ function useList<T>({
       return {
         ref,
         onMouseMove: () => handleMouseMove(item),
-        onClick: () => onSelectItem(decoratedItem.item)
+        onClick: () => onSelectItem(decoratedItem.item),
+        "data-testid": "option"
       };
     },
     [handleMouseMove, onSelectItem]

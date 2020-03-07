@@ -1,6 +1,5 @@
 import React from "react";
 import Select from "./components/Select";
-import SelectAutoTargetFirstItem from "./components/SelectAutoTargetFirstItem";
 import UncontrolledFilterStringUncontrolledFilteringSelect from "./components/UncontrolledFilterStringUncontrolledFilteringSelect";
 import ControlledFilterStringUncontrolledFilteringSelect from "./components/ControlledFilterStringUncontrolledFilteringSelect";
 import UncontrolledFilterStringControlledFilteringSelect from "./components/UncontrolledFilterStringControlledFilteringSelect";
@@ -22,7 +21,7 @@ function App() {
       </div>
       <h3>Select with autoTargetFirstItem</h3>
       <div className="m-4">
-        <SelectAutoTargetFirstItem items={items} />
+        <Select items={items} autoTargetFirstItem />
       </div>
       <h3>Uncontrolled filterString; uncontrolled filtering select</h3>
       <div className="m-4">

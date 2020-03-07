@@ -9,13 +9,15 @@ type Item = {
 
 interface IFilterableSelectProps {
   items: Array<Item>;
+  autoTargetFirstItem?: boolean;
 }
 
 // controlled filterString, uncontrolled filtering
 function ControlledFilterStringUncontrolledFilteringSelect({
-  items
+  items,
+  autoTargetFirstItem
 }: IFilterableSelectProps) {
-  const [selected, setSelected] = useState(items[0]);
+  const [selected, setSelected] = useState<Item | null>(null);
   const [filterString, setFilterString] = useState("");
 
   function handleChangeFilter(filterString: string) {
@@ -38,7 +40,8 @@ function ControlledFilterStringUncontrolledFilteringSelect({
     filterString,
     items,
     itemMatchesFilter,
-    selected
+    selected,
+    autoTargetFirstItem
   });
 
   return (
@@ -46,9 +49,9 @@ function ControlledFilterStringUncontrolledFilteringSelect({
       <div
         {...getSelectProps()}
         {...getTriggerProps()}
-        className="max-w-sm border border-gray-500 flex"
+        className="max-w-sm h-6 border border-gray-500 flex"
       >
-        {selected.name}
+        {!!selected ? selected.name : ""}
       </div>
       {isOpen && (
         <div className="flex flex-col max-w-sm shadow-lg h-48 border border-gray-500 outline-none">
@@ -62,9 +65,10 @@ function ControlledFilterStringUncontrolledFilteringSelect({
             {...getListProps()}
             className="overflow-y-auto flex-grow outline-none relative"
           >
-            {decoratedItems.map((item: any) => (
+            {decoratedItems.map((item: any, index) => (
               <li
                 {...getItemProps(item)}
+                key={item.name || index}
                 className={classnames({
                   "bg-gray-300": isItemActive(item),
                   "bg-blue-500": isItemSelected(item)
