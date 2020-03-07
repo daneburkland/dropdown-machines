@@ -15,6 +15,7 @@ interface IuseSelect<T> {
   selected: T | Array<T>;
   onSelectOption(item: T): any;
   filterString?: string;
+  autoTargetFirstItem?: boolean;
 }
 
 function useSelect({
@@ -23,6 +24,7 @@ function useSelect({
   selected,
   onSelectOption,
   onChangeFilter,
+  autoTargetFirstItem,
   filterString: controlledFilterString
 }: IuseSelect<object>) {
   const [isOpen, setIsOpen] = useState(false);
@@ -82,6 +84,7 @@ function useSelect({
     filterString,
     itemMatchesFilter,
     selected,
+    autoTargetFirstItem,
     onSelectItem: handleSelectOption
   });
 

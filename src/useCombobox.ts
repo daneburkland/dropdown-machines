@@ -20,7 +20,7 @@ interface IUseCombobox<T> {
   onUpdateValue?(value: string): void;
   onSelectOption?(item: T): void;
   itemMatchesFilter?(item: T, filterString: string): boolean;
-  autoSelect?: boolean;
+  autoTargetFirstItem?: boolean;
   inlineAutoComplete?: boolean;
 }
 
@@ -30,7 +30,7 @@ function useCombobox({
   value: controlledValue,
   onUpdateValue: onUpdateControlledValue,
   onSelectOption: onSelectControlledOption,
-  autoSelect,
+  autoTargetFirstItem,
   inlineAutoComplete
 }: IUseCombobox<object>) {
   const [isOpen, setIsOpen] = useState(false);
@@ -89,7 +89,7 @@ function useCombobox({
     filterString: value,
     itemMatchesFilter,
     onSelectItem: handleSelectOption,
-    autoActivateFirstResult: autoSelect
+    autoTargetFirstItem: autoTargetFirstItem
   });
 
   const isFocused = useMemo(
@@ -120,10 +120,10 @@ function useCombobox({
   }, [value]);
 
   const handleKeydownTab = useCallback(() => {
-    if (activeItem && autoSelect) {
+    if (activeItem && autoTargetFirstItem) {
       handleSelectOption(activeDecoratedItem);
     }
-  }, [activeDecoratedItem, autoSelect, handleSelectOption]);
+  }, [activeDecoratedItem, autoTargetFirstItem, handleSelectOption]);
 
   const comboboxKeydownMap = useMemo(
     () => ({

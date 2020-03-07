@@ -19,7 +19,7 @@ interface IUseList<T> {
   selected?: Array<T> | T;
   filterString?: string;
   onSelectItem(item: T): void;
-  autoActivateFirstResult?: boolean;
+  autoTargetFirstItem?: boolean;
   activeItem: T | null;
   setActiveItem: Dispatch<SetStateAction<T | null>>;
 }
@@ -35,7 +35,7 @@ function useList<T>({
   filterString = "",
   selected,
   onSelectItem,
-  autoActivateFirstResult,
+  autoTargetFirstItem,
   activeItem,
   setActiveItem
 }: IUseList<T>) {
@@ -78,7 +78,7 @@ function useList<T>({
   }, [filterString, items, itemMatchesFilter]);
 
   useEffect(() => {
-    if (autoActivateFirstResult && !!filteredDecoratedItems.length) {
+    if (autoTargetFirstItem && !!filteredDecoratedItems.length) {
       setActiveItem(filteredDecoratedItems[0].item);
     } else if (!filteredDecoratedItems.length) {
       setActiveItem(null);

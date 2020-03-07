@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
-import { itemMatchesFilter } from "./../utils";
 
 type Item = {
   name: string;
@@ -11,34 +10,46 @@ interface IFilterableSelectProps {
   items: Array<Item>;
 }
 
-// controlled filterString, uncontrolled filtering
-function ControlledFilterStringUncontrolledFilteringSelect({
+function UncontrolledFilterStringUncontrolledFilterableSelect({
   items
 }: IFilterableSelectProps) {
   const [selected, setSelected] = useState(items[0]);
+  const [filteredItems, setFilteredItems] = useState(items);
   const [filterString, setFilterString] = useState("");
 
-  function handleChangeFilter(filterString: string) {
-    setFilterString(filterString);
-  }
+  const itemMatchesFilter = useCallback((item: any, filterString: string) => {
+    return (
+      item.name.toLowerCase().indexOf(filterString.trim().toLowerCase()) > -1
+    );
+  }, []);
+
+  const handleChangeFilter = useCallback(
+    filterString => {
+      setFilterString(filterString);
+      const filteredItems = items.filter(item =>
+        itemMatchesFilter(item, filterString)
+      );
+      setFilteredItems(filteredItems);
+    },
+    [items, itemMatchesFilter]
+  );
 
   const {
     isOpen,
-    decoratedItems,
     getItemProps,
     getListProps,
     getFilterInputProps,
     getSelectProps,
     getTriggerProps,
     isItemActive,
-    isItemSelected
+    isItemSelected,
+    decoratedItems
   } = useSelect({
     onSelectOption: setSelected,
+    items: filteredItems,
     onChangeFilter: handleChangeFilter,
-    filterString,
-    items,
-    itemMatchesFilter,
-    selected
+    selected,
+    filterString
   });
 
   return (
@@ -80,4 +91,4 @@ function ControlledFilterStringUncontrolledFilteringSelect({
   );
 }
 
-export default ControlledFilterStringUncontrolledFilteringSelect;
+export default UncontrolledFilterStringUncontrolledFilterableSelect;

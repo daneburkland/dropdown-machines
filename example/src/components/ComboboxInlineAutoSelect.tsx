@@ -1,6 +1,7 @@
 import React from "react";
 import classnames from "classnames";
 import { useCombobox } from "use-dropdown";
+import { itemMatchesFilter } from "./../utils";
 
 type Item = {
   name: string;
@@ -11,15 +12,6 @@ interface ISelectProps {
 }
 
 function Select({ items }: ISelectProps) {
-  function itemMatchesFilter(item: any, filterString: string) {
-    return (
-      item.name
-        .toLowerCase()
-        .substring(0, filterString.length)
-        .indexOf(filterString.toLowerCase()) > -1
-    );
-  }
-
   const {
     isOpen,
     decoratedItems,
@@ -30,7 +22,7 @@ function Select({ items }: ISelectProps) {
   } = useCombobox({
     items,
     itemMatchesFilter,
-    autoSelect: true,
+    autoTargetFirstItem: true,
     inlineAutoComplete: true
   });
 

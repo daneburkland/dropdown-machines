@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
+import { itemMatchesFilter } from "./../utils";
 
 type Item = {
   name: string;
@@ -25,7 +26,9 @@ interface IMultiSelectProps {
   items: Array<Item>;
 }
 
-function MultiSelect({ items }: IMultiSelectProps) {
+function UncontrolledFilterStringUncontrolledFilteringMultiSelect({
+  items
+}: IMultiSelectProps) {
   const [selected, setSelected] = useState([items[0]]);
 
   function handleSelectOption(item: any) {
@@ -38,12 +41,6 @@ function MultiSelect({ items }: IMultiSelectProps) {
 
   function handleRemoveSelectedItem(item: any) {
     setSelected(selected.filter(selectedItem => selectedItem !== item));
-  }
-
-  function itemMatchesFilter(item: any, filterString: string) {
-    return (
-      item.name.toLowerCase().indexOf(filterString.trim().toLowerCase()) > -1
-    );
   }
 
   const {
@@ -113,4 +110,4 @@ function MultiSelect({ items }: IMultiSelectProps) {
   );
 }
 
-export default MultiSelect;
+export default UncontrolledFilterStringUncontrolledFilteringMultiSelect;

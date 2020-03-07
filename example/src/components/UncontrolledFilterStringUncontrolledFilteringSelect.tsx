@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
+import { itemMatchesFilter } from "./../utils";
 
 type Item = {
   name: string;
@@ -15,12 +16,6 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
   items
 }: IFilterableSelectProps) {
   const [selected, setSelected] = useState(items[0]);
-
-  function itemMatchesFilter(item: any, filterString: string) {
-    return (
-      item.name.toLowerCase().indexOf(filterString.trim().toLowerCase()) > -1
-    );
-  }
 
   const {
     isOpen,
