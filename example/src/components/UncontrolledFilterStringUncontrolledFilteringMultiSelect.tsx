@@ -96,8 +96,8 @@ function UncontrolledFilterStringUncontrolledFilteringMultiSelect({
                 {...getItemProps(item)}
                 key={item.id || index}
                 className={classnames({
-                  "bg-gray-300": isItemActive(item),
-                  "bg-blue-500": isItemSelected(item)
+                  "bg-gray-200": isItemActive(item),
+                  "bg-gray-400": isItemSelected(item)
                 })}
               >
                 {item.item.name}

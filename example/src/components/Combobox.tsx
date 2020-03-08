@@ -56,7 +56,7 @@ function Combobox({ items }: IComboboxProps) {
                 {...getItemProps(decoratedItem)}
                 key={decoratedItem.item.id}
                 className={classnames({
-                  "bg-gray-300": isItemActive(decoratedItem)
+                  "bg-gray-200": isItemActive(decoratedItem)
                 })}
               >
                 {decoratedItem.item.name}

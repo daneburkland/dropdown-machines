@@ -1,6 +1,13 @@
 import React, { useState, MouseEvent } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
+import { itemStyles } from "./Select";
+
+export const multiSelectStyles =
+  "w-64 h-12 border border-gray-500 flex rounded-sm outline-none items-center p-2 focus:border-blue-600 cursor-pointer";
+
+export const listStyles =
+  "w-64 shadow-lg h-48 border border-gray-500 outline-none absolute bg-white z-10 border-blue-600 overflow-y-auto cursor-pointer";
 
 type Item = {
   name: string;
@@ -18,7 +25,7 @@ function SelectedItem({ item, onRemove }: ISelectedItemProps) {
     onRemove(item);
   }
   return (
-    <span className="mr-3">
+    <span className="mr-2 border border-gray-500 rounded-lg px-2 text-xs">
       {item.name}
       <span onClick={handleClick}>x</span>
     </span>
@@ -64,9 +71,9 @@ function MultiSelect({ items, autoTargetFirstItem }: IMultiSelectProps) {
     <div>
       <div
         {...getSelectProps()}
-        className="max-w-sm h-6 border border-gray-500 flex"
+        className={classnames(multiSelectStyles, { "border-blue-600": isOpen })}
       >
-        <div className="flex-grow">
+        <div className="flex flex-wrap">
           {selected.map(item => (
             <SelectedItem
               key={item.id}
@@ -77,25 +84,23 @@ function MultiSelect({ items, autoTargetFirstItem }: IMultiSelectProps) {
         </div>
       </div>
       {isOpen && (
-        <div className="flex flex-col max-w-sm shadow-lg h-48 border border-gray-500 outline-none">
-          <ul
-            {...getListProps()}
-            className="overflow-y-auto flex-grow outline-none relative"
-          >
-            {decoratedItems.map((item: any, index) => (
-              <li
-                {...getItemProps(item)}
-                key={item.id || index}
-                className={classnames({
-                  "bg-gray-300": isItemActive(item),
-                  "bg-blue-500": isItemSelected(item)
-                })}
-              >
-                {item.item.name}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul
+          {...getListProps()}
+          className={classnames(listStyles, { hidden: !isOpen })}
+        >
+          {decoratedItems.map((item: any, index) => (
+            <li
+              {...getItemProps(item)}
+              key={item.id || index}
+              className={classnames(itemStyles, {
+                "bg-gray-200": isItemActive(item),
+                "bg-gray-400": isItemSelected(item)
+              })}
+            >
+              {item.item.name}
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

@@ -14,6 +14,7 @@ function useHandleKeydown(keydownMap: KeydownMap) {
     } else if (keydownMap.default) {
       keydownMap.default(e);
     }
+    e.preventDefault();
   }
 
   return { handleKeyDown };

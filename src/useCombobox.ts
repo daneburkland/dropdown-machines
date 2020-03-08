@@ -83,7 +83,10 @@ function useCombobox({
     filterString: value,
     itemMatchesFilter,
     onSelectItem: handleSelectOption,
-    autoTargetFirstItem: autoTargetFirstItem
+    autoTargetFirstItem: autoTargetFirstItem,
+    additionalItemProps: {
+      onMouseDown: () => handleSelectOption(activeDecoratedItem)
+    }
   });
 
   const isFocused = useMemo(

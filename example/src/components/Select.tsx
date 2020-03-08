@@ -12,6 +12,14 @@ interface IFilterableSelectProps {
   autoTargetFirstItem?: boolean;
 }
 
+export const selectStyles =
+  "w-48 h-10 border border-gray-500 flex rounded-sm outline-none items-center p-2 focus:border-blue-600 cursor-pointer";
+
+export const listStyles =
+  "w-48 shadow-lg h-48 border border-gray-500 rounded-sm rounded-t-none outline-none absolute bg-white z-10 border-blue-600 overflow-y-auto cursor-pointer";
+
+export const itemStyles = "px-2 py-1";
+
 function Select({ items, autoTargetFirstItem }: IFilterableSelectProps) {
   const [selected, setSelected] = useState<Item | null>(null);
 
@@ -31,35 +39,33 @@ function Select({ items, autoTargetFirstItem }: IFilterableSelectProps) {
   });
 
   return (
-    <div>
+    <>
       <div
         {...getSelectProps()}
-        className="max-w-sm h-6 border border-gray-500 flex"
+        className={classnames(selectStyles, {
+          "border-blue-600 rounded-b-none": isOpen
+        })}
       >
         {!!selected ? selected.name : ""}
       </div>
-      {isOpen && (
-        <div className="flex flex-col max-w-sm shadow-lg h-48 border border-gray-500 outline-none">
-          <ul
-            {...getListProps()}
-            className="overflow-y-auto flex-grow outline-none relative"
+      <ul
+        {...getListProps()}
+        className={classnames(listStyles, { hidden: !isOpen })}
+      >
+        {decoratedItems.map(decoratedItem => (
+          <li
+            {...getItemProps(decoratedItem)}
+            key={decoratedItem.item.id}
+            className={classnames(itemStyles, {
+              "bg-gray-200": isItemActive(decoratedItem),
+              "bg-gray-400": isItemSelected(decoratedItem)
+            })}
           >
-            {decoratedItems.map(decoratedItem => (
-              <li
-                {...getItemProps(decoratedItem)}
-                key={decoratedItem.item.id}
-                className={classnames({
-                  "bg-gray-300": isItemActive(decoratedItem),
-                  "bg-blue-500": isItemSelected(decoratedItem)
-                })}
-              >
-                {decoratedItem.item.name}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
+            {decoratedItem.item.name}
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 

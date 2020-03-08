@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import useList from "./useList";
-import useHandleKeydown from "./useHandleKeydown";
 import useFilterInput from "./useFilterInput";
 import useEphemeralString from "./useEphemeralString";
 import { DecoratedItem } from "./index";
+import keycode from "keycode";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
@@ -144,18 +144,6 @@ function useSelect({
     }
   }, [activeItem, handleSelectOption, setIsOpen, isOpen]);
 
-  const selectKeydownMap = useMemo(
-    () => ({
-      up: decrementActiveItem,
-      down: incrementActiveItem,
-      space: handleKeydownSpaceSelect,
-      enter: () => handleSelectOption(activeDecoratedItem),
-      esc: close,
-      default: handleKeyboardEvent
-    }),
-    [close, filterInputKeydownMap, handleKeydownSpaceSelect]
-  );
-
   const { getFilterInputProps, ref: filterInputRef } = useFilterInput({
     onChange: handleChangeFilter,
     keydownMap: filterInputKeydownMap
@@ -171,17 +159,48 @@ function useSelect({
     }
   }, [isOpen, listRef, filterInputRef]);
 
-  const { handleKeyDown: handleKeydownSelect } = useHandleKeydown(
-    selectKeydownMap
+  const handleKeyDown = useCallback(
+    e => {
+      switch (keycode(e.which)) {
+        case "up":
+          decrementActiveItem();
+          e.preventDefault();
+          return;
+        case "down":
+          incrementActiveItem();
+          e.preventDefault();
+          return;
+        case "space":
+          handleKeydownSpaceSelect();
+          return;
+        case "enter":
+          handleSelectOption(activeDecoratedItem);
+          return;
+        case "esc":
+          close();
+          return;
+        default:
+          handleKeyboardEvent(e);
+      }
+    },
+    [
+      decrementActiveItem,
+      incrementActiveItem,
+      handleKeydownSpaceSelect,
+      handleSelectOption,
+      activeDecoratedItem,
+      handleKeyboardEvent
+    ]
   );
+
   const getSelectProps = useCallback(() => {
     return {
       tabIndex: 0,
-      onKeyDown: handleKeydownSelect,
+      onKeyDown: handleKeyDown,
       "data-testid": "select",
       onClick: handleClickTrigger
     };
-  }, [handleKeydownSelect]);
+  }, [handleKeyDown]);
 
   return {
     isOpen,

@@ -23,6 +23,7 @@ interface IUseList<T> {
   autoTargetFirstItem?: boolean;
   activeItem: T | null;
   setActiveItem: Dispatch<SetStateAction<null | T>>;
+  additionalItemProps?: object;
 }
 
 function useList<T>({
@@ -33,7 +34,8 @@ function useList<T>({
   onSelectItem,
   autoTargetFirstItem,
   activeItem,
-  setActiveItem
+  setActiveItem,
+  additionalItemProps
 }: IUseList<T>) {
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -130,7 +132,7 @@ function useList<T>({
   const decrementActiveItem = useCallback(() => {
     if (!listRef.current) return;
     let newActiveItemIndex;
-    if (activeItemIndex === 0) {
+    if (activeItemIndex <= 0) {
       newActiveItemIndex = filteredDecoratedItems.length - 1;
     } else {
       newActiveItemIndex = activeItemIndex - 1;
@@ -170,7 +172,8 @@ function useList<T>({
         ref,
         onMouseMove: () => handleMouseMove(item),
         onClick: () => onSelectItem(decoratedItem),
-        "data-testid": "option"
+        "data-testid": "option",
+        ...additionalItemProps
       };
     },
     [handleMouseMove, onSelectItem]
@@ -189,8 +192,8 @@ function useList<T>({
   );
 
   const scrollDecoratedItemIntoView = useCallback(({ ref }) => {
-    if (!ref.current) return;
-    // ref.current?.scrollIntoView();
+    if (!ref.current?.scrollIntoView) return;
+    ref.current?.scrollIntoView();
   }, []);
 
   return {

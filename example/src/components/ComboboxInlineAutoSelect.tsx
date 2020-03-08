@@ -38,14 +38,15 @@ function Select({ items }: ISelectProps) {
           {...getListProps()}
           className="overflow-y-auto flex-grow outline-none max-w-sm shadow-lg h-48 border border-gray-500 outline-none relative"
         >
-          {decoratedItems.map((item: any) => (
+          {decoratedItems.map((decoratedItem: any) => (
             <li
-              {...getItemProps(item)}
+              {...getItemProps(decoratedItem)}
+              key={decoratedItem.item.id}
               className={classnames({
-                "bg-gray-300": isItemActive(item)
+                "bg-gray-200": isItemActive(decoratedItem)
               })}
             >
-              {item.item.name}
+              {decoratedItem.item.name}
             </li>
           ))}
         </ul>
