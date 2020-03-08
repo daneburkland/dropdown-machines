@@ -25,7 +25,6 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
     getListProps,
     getFilterInputProps,
     getSelectProps,
-    getTriggerProps,
     isItemActive,
     isItemSelected
   } = useSelect({
@@ -40,7 +39,6 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
     <div>
       <div
         {...getSelectProps()}
-        {...getTriggerProps()}
         className="max-w-sm h-6 border border-gray-500 flex"
       >
         {!!selected ? selected.name : ""}

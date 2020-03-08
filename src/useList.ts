@@ -3,11 +3,12 @@ import {
   useRef,
   createRef,
   useCallback,
-  RefObject,
   useEffect,
   Dispatch,
   SetStateAction
 } from "react";
+
+import { DecoratedItem } from "./index";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
@@ -18,16 +19,11 @@ interface IUseList<T> {
   itemMatchesFilter?(item: T, filterString: string): boolean;
   selected?: null | T | Array<T>;
   filterString?: string;
-  onSelectItem(item: T | null): void;
+  onSelectItem(item: DecoratedItem<HTMLElement, T> | null): void;
   autoTargetFirstItem?: boolean;
   activeItem: T | null;
-  setActiveItem: Dispatch<SetStateAction<T | null>>;
+  setActiveItem: Dispatch<SetStateAction<null | T>>;
 }
-
-export type DecoratedItem<RefT, I> = {
-  ref: RefObject<RefT>;
-  item: I;
-};
 
 function useList<T>({
   items,
@@ -50,7 +46,7 @@ function useList<T>({
   }, []);
 
   const defaultItemMatchesFilterString = useCallback(
-    (decoratedItem: DecoratedItem<any, T>, filterString: string) => {
+    (decoratedItem: DecoratedItem<HTMLElement, T>, filterString: string) => {
       if (!decoratedItem.ref.current) return false;
       return (
         defaultItemDisplayValue(decoratedItem).indexOf(
@@ -153,7 +149,7 @@ function useList<T>({
   );
 
   const isItemSelected = useCallback(
-    item => {
+    ({ item }) => {
       if (isArray(selected)) {
         return selected.includes(item);
       } else {
@@ -173,7 +169,7 @@ function useList<T>({
       return {
         ref,
         onMouseMove: () => handleMouseMove(item),
-        onClick: () => onSelectItem(decoratedItem.item),
+        onClick: () => onSelectItem(decoratedItem),
         "data-testid": "option"
       };
     },
@@ -182,7 +178,8 @@ function useList<T>({
 
   const getListProps = useCallback(() => {
     return {
-      ref: listRef
+      ref: listRef,
+      "data-testid": "listBox"
     };
   }, []);
 
@@ -190,6 +187,11 @@ function useList<T>({
     () => filteredDecoratedItems[activeItemIndex],
     [filteredDecoratedItems, activeItemIndex]
   );
+
+  const scrollDecoratedItemIntoView = useCallback(({ ref }) => {
+    if (!ref.current) return;
+    // ref.current?.scrollIntoView();
+  }, []);
 
   return {
     decoratedItems: filteredDecoratedItems,
@@ -204,7 +206,8 @@ function useList<T>({
     incrementActiveItem,
     defaultItemMatchesFilterString,
     defaultItemDisplayValue,
-    activeDecoratedItem
+    activeDecoratedItem,
+    scrollDecoratedItemIntoView
   };
 }
 

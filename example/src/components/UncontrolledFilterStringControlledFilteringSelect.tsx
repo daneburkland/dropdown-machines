@@ -41,7 +41,6 @@ function UncontrolledFilterStringUncontrolledFilteringSelect({
     getListProps,
     getFilterInputProps,
     getSelectProps,
-    getTriggerProps,
     isItemActive,
     isItemSelected,
     decoratedItems
@@ -57,7 +56,6 @@ function UncontrolledFilterStringUncontrolledFilteringSelect({
     <div>
       <div
         {...getSelectProps()}
-        {...getTriggerProps()}
         className="max-w-sm h-6 border border-gray-500 flex"
       >
         {!!selected ? selected.name : ""}

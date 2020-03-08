@@ -3,17 +3,20 @@ import useList from "./useList";
 import useHandleKeydown from "./useHandleKeydown";
 import useFilterInput from "./useFilterInput";
 import useEphemeralString from "./useEphemeralString";
+import { DecoratedItem } from "./index";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
 }
+
+type Item = any;
 
 interface IuseSelect<T> {
   items: Array<T>;
   itemMatchesFilter?(item: T, filterString: string): boolean;
   onChangeFilter?(filterString: string): void;
   selected: null | T | Array<T>;
-  onSelectOption(item: null | T): void;
+  onSelectOption(item: T | null): void;
   filterString?: string;
   autoTargetFirstItem?: boolean;
 }
@@ -26,9 +29,9 @@ function useSelect({
   onChangeFilter,
   autoTargetFirstItem,
   filterString: controlledFilterString
-}: IuseSelect<object>) {
+}: IuseSelect<Item>) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState(null);
+  const [activeItem, setActiveItem] = useState<Item | null>(null);
   const [uncontrolledFilterString, setUncontrolledFilterString] = useState("");
   const isControlledFiltering = useMemo(() => !!controlledFilterString, [
     controlledFilterString
@@ -59,9 +62,11 @@ function useSelect({
   }, [isOpen]);
 
   const handleSelectOption = useCallback(
-    option => {
+    decoratedItem => {
       if (isOpen) {
-        onSelectOption(option);
+        if (!!decoratedItem) {
+          onSelectOption(decoratedItem.item);
+        }
         setActiveItem(null);
         close();
       }
@@ -78,7 +83,9 @@ function useSelect({
     listRef,
     decrementActiveItem,
     incrementActiveItem,
-    defaultItemMatchesFilterString
+    defaultItemMatchesFilterString,
+    scrollDecoratedItemIntoView,
+    activeDecoratedItem
   } = useList({
     activeItem,
     setActiveItem,
@@ -90,18 +97,11 @@ function useSelect({
     onSelectItem: handleSelectOption
   });
 
-  const getTriggerProps = useCallback(
-    () => ({
-      onClick: handleClickTrigger
-    }),
-    [handleClickTrigger]
-  );
-
   const filterInputKeydownMap = useMemo(
     () => ({
       up: decrementActiveItem,
       down: incrementActiveItem,
-      enter: () => handleSelectOption(activeItem),
+      enter: () => handleSelectOption(activeDecoratedItem),
       esc: close
     }),
     [
@@ -115,15 +115,18 @@ function useSelect({
 
   const handleUpdateKeyboardFocused = useCallback(
     string => {
-      const firstMatch = decoratedItems.find(decoratedItem => {
-        if (itemMatchesFilter) {
-          return itemMatchesFilter(decoratedItem.item, string);
-        } else {
-          return defaultItemMatchesFilterString(decoratedItem, string);
+      const firstMatch = decoratedItems.find(
+        (decoratedItem: DecoratedItem<HTMLElement, object>) => {
+          if (itemMatchesFilter) {
+            return itemMatchesFilter(decoratedItem.item, string);
+          } else {
+            return defaultItemMatchesFilterString(decoratedItem, string);
+          }
         }
-      });
+      );
       if (firstMatch) {
         setActiveItem(firstMatch.item);
+        scrollDecoratedItemIntoView(firstMatch);
       }
     },
     [decoratedItems, itemMatchesFilter]
@@ -137,7 +140,7 @@ function useSelect({
     if (!isOpen) {
       setIsOpen(true);
     } else {
-      handleSelectOption(activeItem);
+      handleSelectOption(activeDecoratedItem);
     }
   }, [activeItem, handleSelectOption, setIsOpen, isOpen]);
 
@@ -146,7 +149,7 @@ function useSelect({
       up: decrementActiveItem,
       down: incrementActiveItem,
       space: handleKeydownSpaceSelect,
-      enter: () => handleSelectOption(activeItem),
+      enter: () => handleSelectOption(activeDecoratedItem),
       esc: close,
       default: handleKeyboardEvent
     }),
@@ -175,7 +178,8 @@ function useSelect({
     return {
       tabIndex: 0,
       onKeyDown: handleKeydownSelect,
-      "data-testid": "select"
+      "data-testid": "select",
+      onClick: handleClickTrigger
     };
   }, [handleKeydownSelect]);
 
@@ -187,10 +191,8 @@ function useSelect({
     getListProps,
     getFilterInputProps,
     getSelectProps,
-    getTriggerProps,
     isItemActive,
-    isItemSelected,
-    onSelectItem: handleSelectOption
+    isItemSelected
   };
 }
 

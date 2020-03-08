@@ -27,6 +27,7 @@ function useFilterInput({ onChange, keydownMap }: IUseFilterInput) {
     () => ({
       onChange: handleInputChange,
       onKeyDown: handleKeyDown,
+      "data-testid": "filterInput",
       ref
     }),
     [handleInputChange, handleKeyDown]

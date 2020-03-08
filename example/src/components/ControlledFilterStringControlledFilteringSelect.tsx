@@ -11,7 +11,7 @@ interface IFilterableSelectProps {
   autoTargetFirstItem?: boolean;
 }
 
-function UncontrolledFilterStringUncontrolledFilteringSelect({
+function ControlledFilterStringControlledFilteringSelect({
   items,
   autoTargetFirstItem
 }: IFilterableSelectProps) {
@@ -42,7 +42,6 @@ function UncontrolledFilterStringUncontrolledFilteringSelect({
     getListProps,
     getFilterInputProps,
     getSelectProps,
-    getTriggerProps,
     isItemActive,
     isItemSelected,
     decoratedItems
@@ -59,7 +58,6 @@ function UncontrolledFilterStringUncontrolledFilteringSelect({
     <div>
       <div
         {...getSelectProps()}
-        {...getTriggerProps()}
         className="max-w-sm h-6 border border-gray-500 flex"
       >
         {!!selected ? selected.name : ""}
@@ -76,9 +74,10 @@ function UncontrolledFilterStringUncontrolledFilteringSelect({
             {...getListProps()}
             className="overflow-y-auto flex-grow outline-none relative"
           >
-            {decoratedItems.map((item: any) => (
+            {decoratedItems.map((item: any, index) => (
               <li
                 {...getItemProps(item)}
+                key={item.id || index}
                 className={classnames({
                   "bg-gray-300": isItemActive(item),
                   "bg-blue-500": isItemSelected(item)
@@ -94,4 +93,4 @@ function UncontrolledFilterStringUncontrolledFilteringSelect({
   );
 }
 
-export default UncontrolledFilterStringUncontrolledFilteringSelect;
+export default ControlledFilterStringControlledFilteringSelect;

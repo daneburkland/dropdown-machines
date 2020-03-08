@@ -4,6 +4,7 @@ import { useSelect } from "use-dropdown";
 
 type Item = {
   name: string;
+  id: string;
 };
 
 interface IFilterableSelectProps {
@@ -11,10 +12,7 @@ interface IFilterableSelectProps {
   autoTargetFirstItem?: boolean;
 }
 
-function UncontrolledFilterStringUncontrolledFilterableSelect({
-  items,
-  autoTargetFirstItem
-}: IFilterableSelectProps) {
+function Select({ items, autoTargetFirstItem }: IFilterableSelectProps) {
   const [selected, setSelected] = useState<Item | null>(null);
 
   const {
@@ -23,7 +21,6 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
     getItemProps,
     getListProps,
     getSelectProps,
-    getTriggerProps,
     isItemActive,
     isItemSelected
   } = useSelect({
@@ -37,7 +34,6 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
     <div>
       <div
         {...getSelectProps()}
-        {...getTriggerProps()}
         className="max-w-sm h-6 border border-gray-500 flex"
       >
         {!!selected ? selected.name : ""}
@@ -48,16 +44,16 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
             {...getListProps()}
             className="overflow-y-auto flex-grow outline-none relative"
           >
-            {decoratedItems.map((item: any, index) => (
+            {decoratedItems.map(decoratedItem => (
               <li
-                {...getItemProps(item)}
-                key={item.id || index}
+                {...getItemProps(decoratedItem)}
+                key={decoratedItem.item.id}
                 className={classnames({
-                  "bg-gray-300": isItemActive(item),
-                  "bg-blue-500": isItemSelected(item)
+                  "bg-gray-300": isItemActive(decoratedItem),
+                  "bg-blue-500": isItemSelected(decoratedItem)
                 })}
               >
-                {item.item.name}
+                {decoratedItem.item.name}
               </li>
             ))}
           </ul>
@@ -67,4 +63,4 @@ function UncontrolledFilterStringUncontrolledFilterableSelect({
   );
 }
 
-export default UncontrolledFilterStringUncontrolledFilterableSelect;
+export default Select;

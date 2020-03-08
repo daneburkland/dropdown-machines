@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, MouseEvent } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
 import { itemMatchesFilter } from "./../utils";
 
 type Item = {
   name: string;
-  id: number;
+  id: string;
 };
 
 interface ISelectedItemProps {
@@ -14,10 +14,14 @@ interface ISelectedItemProps {
 }
 
 function SelectedItem({ item, onRemove }: ISelectedItemProps) {
+  function handleClick(event: MouseEvent) {
+    event.stopPropagation();
+    onRemove(item);
+  }
   return (
     <span className="mr-3">
       {item.name}
-      <span onClick={() => onRemove(item)}>x</span>
+      <span onClick={handleClick}>x</span>
     </span>
   );
 }
@@ -61,7 +65,6 @@ function UncontrolledFilterStringControlledFilteringMultiSelect({
     getListProps,
     getFilterInputProps,
     getSelectProps,
-    getTriggerProps,
     isItemActive,
     isItemSelected
   } = useSelect({
@@ -75,7 +78,7 @@ function UncontrolledFilterStringControlledFilteringMultiSelect({
     <div>
       <div
         {...getSelectProps()}
-        className="max-w-sm border border-gray-500 flex"
+        className="max-w-sm h-6 border border-gray-500 flex"
       >
         <div className="flex-grow">
           {selected.map(item => (
@@ -86,9 +89,6 @@ function UncontrolledFilterStringControlledFilteringMultiSelect({
             />
           ))}
         </div>
-        <span {...getTriggerProps()} className="w-2">
-          v
-        </span>
       </div>
       {isOpen && (
         <div className="flex flex-col max-w-sm shadow-lg h-48 border border-gray-500 outline-none">

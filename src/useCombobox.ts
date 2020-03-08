@@ -14,6 +14,8 @@ export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
 }
 
+type Item = any;
+
 interface IUseCombobox<T> {
   items: Array<T>;
   value?: string;
@@ -32,10 +34,10 @@ function useCombobox({
   onSelectOption: onSelectControlledOption,
   autoTargetFirstItem,
   inlineAutoComplete
-}: IUseCombobox<object>) {
+}: IUseCombobox<Item>) {
   const [isOpen, setIsOpen] = useState(false);
   const [uncontrolledValue, setUncontrolledValue] = useState<string>("");
-  const [activeItem, setActiveItem] = useState<null | object>(null);
+  const [activeItem, setActiveItem] = useState<Item | null>(null);
   const [autoCompleteStem, setAutoCompleteStem] = useState("");
   const comboboxRef = useRef<HTMLInputElement>(null);
 
@@ -47,18 +49,6 @@ function useCombobox({
   const prevValue = usePrevious(value) || "";
   const prevAutocompleteStem = usePrevious(autoCompleteStem) || "";
 
-  const onSelectOption = useCallback(
-    decoratedItem => {
-      if (!!onSelectControlledOption) {
-        onSelectControlledOption(decoratedItem.item);
-      } else {
-        setUncontrolledValue(defaultItemDisplayValue(decoratedItem));
-      }
-      onSelectControlledOption || setUncontrolledValue;
-    },
-    [onSelectControlledOption, setUncontrolledValue]
-  );
-
   const close = useCallback(() => {
     comboboxRef.current?.blur();
     setIsOpen(false);
@@ -66,11 +56,15 @@ function useCombobox({
   }, [comboboxRef.current, setIsOpen, setActiveItem]);
 
   const handleSelectOption = useCallback(
-    activeDecoratedItem => {
-      onSelectOption(activeDecoratedItem);
+    decoratedItem => {
+      if (!!onSelectControlledOption) {
+        onSelectControlledOption(decoratedItem.item);
+      } else {
+        setUncontrolledValue(defaultItemDisplayValue(decoratedItem));
+      }
       close();
     },
-    [close, onSelectOption]
+    [onSelectControlledOption, setUncontrolledValue, close]
   );
 
   const {

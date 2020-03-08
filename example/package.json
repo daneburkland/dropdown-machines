@@ -18,6 +18,7 @@
     "use-dropdown": "file:.."
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.1.1",
     "@testing-library/react": "^9.5.0",
     "autoprefixer": "^9.7.4",
     "postcss-cli": "^7.1.0",

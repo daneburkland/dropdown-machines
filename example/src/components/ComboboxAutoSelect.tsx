@@ -1,17 +1,18 @@
 import React, { useState } from "react";
 import classnames from "classnames";
-import { useCombobox } from "use-dropdown";
+import { useCombobox, DecoratedItem } from "use-dropdown";
 import { itemMatchesFilter } from "./../utils";
 
 type Item = {
   name: string;
+  id: string;
 };
 
-interface ISelectProps {
+interface IComboboxProps {
   items: Array<Item>;
 }
 
-function Select({ items }: ISelectProps) {
+function Select({ items }: IComboboxProps) {
   const [value, setValue] = useState("");
 
   function handleUpdateValue(value: string) {
@@ -50,16 +51,19 @@ function Select({ items }: ISelectProps) {
           {...getListProps()}
           className="overflow-y-auto flex-grow outline-none max-w-sm shadow-lg h-48 border border-gray-500 outline-none relative"
         >
-          {decoratedItems.map((item: any) => (
-            <li
-              {...getItemProps(item)}
-              className={classnames({
-                "bg-gray-300": isItemActive(item)
-              })}
-            >
-              {item.item.name}
-            </li>
-          ))}
+          {decoratedItems.map(
+            (decoratedItem: DecoratedItem<HTMLElement, Item>) => (
+              <li
+                {...getItemProps(decoratedItem)}
+                key={decoratedItem.item.id}
+                className={classnames({
+                  "bg-gray-300": isItemActive(decoratedItem)
+                })}
+              >
+                {decoratedItem.item.name}
+              </li>
+            )
+          )}
         </ul>
       )}
     </div>
