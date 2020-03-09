@@ -2,6 +2,12 @@ import React, { useState } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
 import { itemMatchesFilter } from "./../utils";
+import {
+  selectStyles,
+  listBoxStyles,
+  listBoxContainerStyles,
+  itemStyles
+} from "./Select";
 
 type Item = {
   name: string;
@@ -12,7 +18,6 @@ interface IFilterableSelectProps {
   autoTargetFirstItem?: boolean;
 }
 
-// controlled filterString, uncontrolled filtering
 function ControlledFilterStringUncontrolledFilteringSelect({
   items,
   autoTargetFirstItem
@@ -47,37 +52,37 @@ function ControlledFilterStringUncontrolledFilteringSelect({
     <div>
       <div
         {...getSelectProps()}
-        className="max-w-sm h-6 border border-gray-500 flex"
+        className={classnames(selectStyles, {
+          "border-blue-600 rounded-b-none": isOpen
+        })}
       >
         {!!selected ? selected.name : ""}
       </div>
-      {isOpen && (
-        <div className="flex flex-col max-w-sm shadow-lg h-48 border border-gray-500 outline-none">
-          <input
-            {...getFilterInputProps()}
-            className="outline-none"
-            type="text"
-            placeholder="Filter..."
-          />
-          <ul
-            {...getListProps()}
-            className="overflow-y-auto flex-grow outline-none relative"
-          >
-            {decoratedItems.map((item: any, index) => (
-              <li
-                {...getItemProps(item)}
-                key={item.name || index}
-                className={classnames({
-                  "bg-gray-200": isItemActive(item),
-                  "bg-gray-400": isItemSelected(item)
-                })}
-              >
-                {item.item.name}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <div className={classnames(listBoxContainerStyles, { hidden: !isOpen })}>
+        <input
+          {...getFilterInputProps()}
+          className="outline-none"
+          type="text"
+          placeholder="Filter..."
+        />
+        <ul
+          {...getListProps()}
+          className={classnames(listBoxStyles, "relative")}
+        >
+          {decoratedItems.map((item: any, index) => (
+            <li
+              {...getItemProps(item)}
+              key={item.name || index}
+              className={classnames(itemStyles, {
+                "bg-gray-200": isItemActive(item),
+                "bg-gray-400": isItemSelected(item)
+              })}
+            >
+              {item.item.name}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

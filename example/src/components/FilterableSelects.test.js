@@ -113,6 +113,7 @@ Selects.forEach(({ description, getComponent }) => {
         key: "h",
         keyCode: 72
       });
+
       fireEvent.keyDown(selectElement, {
         key: "Enter",
         keyCode: 13
@@ -137,13 +138,14 @@ Selects.forEach(({ description, getComponent }) => {
       expect(options).toHaveLength(items.length);
 
       const filterInput = getByTestId("filterInput");
+
       fireEvent.keyDown(filterInput, {
         key: "Escape",
         keyCode: 27
       });
 
       await wait(() => {
-        expect(queryByTestId("filterInput")).not.toBeInTheDocument();
+        expect(queryByTestId("filterInput")).not.toBeVisible();
       });
     });
 

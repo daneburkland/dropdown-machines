@@ -13,10 +13,12 @@ interface IFilterableSelectProps {
 }
 
 export const selectStyles =
-  "w-48 h-10 border border-gray-500 flex rounded-sm outline-none items-center p-2 focus:border-blue-600 cursor-pointer";
+  "w-64 h-10 border border-gray-500 flex rounded-sm outline-none items-center p-2 focus:border-blue-600 cursor-pointer";
 
-export const listStyles =
-  "w-48 shadow-lg h-48 border border-gray-500 rounded-sm rounded-t-none outline-none absolute bg-white z-10 border-blue-600 overflow-y-auto cursor-pointer";
+export const listBoxContainerStyles =
+  "shadow-lg border border-gray-500 rounded-sm rounded-t-none outline-none absolute bg-white z-10 border-blue-600 cursor-pointer";
+
+export const listBoxStyles = "w-64 h-48 overflow-y-auto cursor-pointer";
 
 export const itemStyles = "px-2 py-1";
 
@@ -50,7 +52,9 @@ function Select({ items, autoTargetFirstItem }: IFilterableSelectProps) {
       </div>
       <ul
         {...getListProps()}
-        className={classnames(listStyles, { hidden: !isOpen })}
+        className={classnames(listBoxStyles, listBoxContainerStyles, {
+          hidden: !isOpen
+        })}
       >
         {decoratedItems.map(decoratedItem => (
           <li

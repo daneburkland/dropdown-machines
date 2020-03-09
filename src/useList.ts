@@ -191,9 +191,10 @@ function useList<T>({
     [filteredDecoratedItems, activeItemIndex]
   );
 
-  const scrollDecoratedItemIntoView = useCallback(({ ref }) => {
+  const scrollDecoratedItemIntoView = useCallback(decoratedItem => {
+    const { ref } = decoratedItem;
     if (!ref.current?.scrollIntoView) return;
-    ref.current?.scrollIntoView();
+    adjustScroll(decoratedItem);
   }, []);
 
   return {

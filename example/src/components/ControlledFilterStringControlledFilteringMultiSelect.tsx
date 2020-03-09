@@ -2,6 +2,13 @@ import React, { useState, useCallback, MouseEvent } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
 import { itemMatchesFilter } from "./../utils";
+import {
+  multiSelectStyles,
+  pillStyles,
+  pillCloseStyles,
+  closeIcon
+} from "./MultiSelect";
+import { itemStyles, listBoxStyles, listBoxContainerStyles } from "./Select";
 
 type Item = {
   name: string;
@@ -19,9 +26,11 @@ function SelectedItem({ item, onRemove }: ISelectedItemProps) {
     onRemove(item);
   }
   return (
-    <span className="mr-3">
-      {item.name}
-      <span onClick={handleClick}>x</span>
+    <span className={pillStyles}>
+      <span className="text-xs">{item.name}</span>
+      <span className={classnames(pillCloseStyles)} onClick={handleClick}>
+        {closeIcon}
+      </span>
     </span>
   );
 }
@@ -81,45 +90,41 @@ function ControlledFilterStringControlledFilteringMultiSelect({
     <div>
       <div
         {...getSelectProps()}
-        className="max-w-sm h-6 border border-gray-500 flex"
+        className={classnames(multiSelectStyles, { "border-blue-600": isOpen })}
       >
-        <div className="flex-grow">
-          {selected.map(item => (
-            <SelectedItem
-              key={item.id}
-              onRemove={handleRemoveSelectedItem}
-              item={item}
-            />
-          ))}
-        </div>
-      </div>
-      {isOpen && (
-        <div className="flex flex-col max-w-sm shadow-lg h-48 border border-gray-500 outline-none">
-          <input
-            {...getFilterInputProps()}
-            className="outline-none"
-            type="text"
-            placeholder="Filter..."
+        {selected.map(item => (
+          <SelectedItem
+            key={item.id}
+            onRemove={handleRemoveSelectedItem}
+            item={item}
           />
-          <ul
-            {...getListProps()}
-            className="overflow-y-auto flex-grow outline-none relative"
-          >
-            {decoratedItems.map((item: any, index) => (
-              <li
-                {...getItemProps(item)}
-                key={item.id || index}
-                className={classnames({
-                  "bg-gray-200": isItemActive(item),
-                  "bg-gray-400": isItemSelected(item)
-                })}
-              >
-                {item.item.name}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        ))}
+      </div>
+      <div className={classnames(listBoxContainerStyles, { hidden: !isOpen })}>
+        <input
+          {...getFilterInputProps()}
+          className="outline-none"
+          type="text"
+          placeholder="Filter..."
+        />
+        <ul
+          {...getListProps()}
+          className={classnames(listBoxStyles, "relative")}
+        >
+          {decoratedItems.map((item: any, index) => (
+            <li
+              {...getItemProps(item)}
+              key={item.id || index}
+              className={classnames(itemStyles, {
+                "bg-gray-200": isItemActive(item),
+                "bg-gray-400": isItemSelected(item)
+              })}
+            >
+              {item.item.name}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

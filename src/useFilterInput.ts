@@ -1,24 +1,20 @@
-import { useRef, useCallback } from "react";
-import useHandleKeydown from "./useHandleKeydown";
-
-type KeydownKey = "down" | "up" | "enter";
-type KeydownMap = {
-  [T in KeydownKey]: any;
-};
+import { useRef, useCallback, KeyboardEvent } from "react";
 
 interface IUseFilterInput {
   onChange?(arg: string): any;
-  keydownMap: KeydownMap;
+  onKeyDown(value: KeyboardEvent): void;
 }
 
-function useFilterInput({ onChange, keydownMap }: IUseFilterInput) {
+function useFilterInput({ onChange, onKeyDown }: IUseFilterInput) {
   const ref = useRef<HTMLInputElement>(null);
 
-  const { handleKeyDown } = useHandleKeydown(keydownMap);
-
   const handleInputChange = useCallback(
-    ({ target: { value } }) => {
+    e => {
+      const {
+        target: { value }
+      } = e;
       onChange && onChange(value);
+      e.preventDefault();
     },
     [onChange]
   );
@@ -26,11 +22,11 @@ function useFilterInput({ onChange, keydownMap }: IUseFilterInput) {
   const getFilterInputProps = useCallback(
     () => ({
       onChange: handleInputChange,
-      onKeyDown: handleKeyDown,
+      onKeyDown,
       "data-testid": "filterInput",
       ref
     }),
-    [handleInputChange, handleKeyDown]
+    [handleInputChange, onKeyDown]
   );
 
   return { getFilterInputProps, ref };

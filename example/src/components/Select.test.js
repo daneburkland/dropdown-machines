@@ -86,9 +86,12 @@ Selects.forEach(({ description, getComponent }) => {
     });
 
     test("closes on `esc`", async () => {
-      const { getByTestId, getAllByTestId, queryAllByTestId } = render(
-        getComponent()
-      );
+      const {
+        getByTestId,
+        getAllByTestId,
+        queryAllByTestId,
+        queryByTestId
+      } = render(getComponent());
 
       const selectElement = getByTestId("select");
 
@@ -103,7 +106,7 @@ Selects.forEach(({ description, getComponent }) => {
       });
 
       await wait(() => {
-        expect(queryAllByTestId("option")).toHaveLength(0);
+        expect(queryByTestId("listBox")).not.toBeVisible();
       });
     });
 

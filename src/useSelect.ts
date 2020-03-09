@@ -97,19 +97,33 @@ function useSelect({
     onSelectItem: handleSelectOption
   });
 
-  const filterInputKeydownMap = useMemo(
-    () => ({
-      up: decrementActiveItem,
-      down: incrementActiveItem,
-      enter: () => handleSelectOption(activeDecoratedItem),
-      esc: close
-    }),
+  const handleKeyDownFilter = useCallback(
+    e => {
+      switch (keycode(e.which)) {
+        case "up":
+          decrementActiveItem();
+          e.preventDefault();
+          return;
+        case "down":
+          incrementActiveItem();
+          e.preventDefault();
+          return;
+        case "enter":
+          handleSelectOption(activeDecoratedItem);
+          return;
+        case "esc":
+        case "tab":
+          close();
+          return;
+        default:
+          return;
+      }
+    },
     [
       decrementActiveItem,
       incrementActiveItem,
-      activeItem,
       handleSelectOption,
-      close
+      activeDecoratedItem
     ]
   );
 
@@ -146,7 +160,7 @@ function useSelect({
 
   const { getFilterInputProps, ref: filterInputRef } = useFilterInput({
     onChange: handleChangeFilter,
-    keydownMap: filterInputKeydownMap
+    onKeyDown: handleKeyDownFilter
   });
 
   useEffect(() => {
@@ -159,7 +173,7 @@ function useSelect({
     }
   }, [isOpen, listRef, filterInputRef]);
 
-  const handleKeyDown = useCallback(
+  const handleKeyDownSelect = useCallback(
     e => {
       switch (keycode(e.which)) {
         case "up":
@@ -177,6 +191,7 @@ function useSelect({
           handleSelectOption(activeDecoratedItem);
           return;
         case "esc":
+        case "tab":
           close();
           return;
         default:
@@ -196,11 +211,11 @@ function useSelect({
   const getSelectProps = useCallback(() => {
     return {
       tabIndex: 0,
-      onKeyDown: handleKeyDown,
+      onKeyDown: handleKeyDownSelect,
       "data-testid": "select",
       onClick: handleClickTrigger
     };
-  }, [handleKeyDown]);
+  }, [handleKeyDownSelect]);
 
   return {
     isOpen,
