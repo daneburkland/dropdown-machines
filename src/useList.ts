@@ -19,7 +19,7 @@ interface IUseList<T> {
   itemMatchesFilter?(item: T, filterString: string): boolean;
   selected?: null | T | Array<T>;
   filterString?: string;
-  onSelectItem(item: DecoratedItem<HTMLElement, T> | null): void;
+  onClickItem(item: DecoratedItem<HTMLElement, T> | null): void;
   autoTargetFirstItem?: boolean;
   activeItem: T | null;
   setActiveItem: Dispatch<SetStateAction<null | T>>;
@@ -31,7 +31,7 @@ function useList<T>({
   itemMatchesFilter,
   filterString = "",
   selected,
-  onSelectItem,
+  onClickItem,
   autoTargetFirstItem,
   activeItem,
   setActiveItem,
@@ -171,12 +171,12 @@ function useList<T>({
       return {
         ref,
         onMouseMove: () => handleMouseMove(item),
-        onClick: () => onSelectItem(decoratedItem),
+        onClick: () => onClickItem(decoratedItem),
         "data-testid": "option",
         ...additionalItemProps
       };
     },
-    [handleMouseMove, onSelectItem]
+    [handleMouseMove, onClickItem]
   );
 
   const getListProps = useCallback(() => {
@@ -204,7 +204,7 @@ function useList<T>({
     isItemActive,
     isItemSelected,
     activeItem,
-    setActiveItem,
+    activeItemIndex,
     listRef,
     decrementActiveItem,
     incrementActiveItem,

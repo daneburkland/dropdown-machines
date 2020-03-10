@@ -91,27 +91,25 @@ function MultiSelect({ items, autoTargetFirstItem }: IMultiSelectProps) {
           />
         ))}
       </div>
-      {isOpen && (
-        <ul
-          {...getListProps()}
-          className={classnames(listBoxStyles, listBoxContainerStyles, {
-            hidden: !isOpen
-          })}
-        >
-          {decoratedItems.map((item: any, index) => (
-            <li
-              {...getItemProps(item)}
-              key={item.id || index}
-              className={classnames(itemStyles, {
-                "bg-gray-200": isItemActive(item),
-                "bg-gray-400": isItemSelected(item)
-              })}
-            >
-              {item.item.name}
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul
+        {...getListProps()}
+        className={classnames(listBoxStyles, listBoxContainerStyles, {
+          hidden: !isOpen
+        })}
+      >
+        {decoratedItems.map((item: any, index) => (
+          <li
+            {...getItemProps(item)}
+            key={item.id || index}
+            className={classnames(itemStyles, {
+              "bg-gray-200": isItemActive(item),
+              "bg-gray-400": isItemSelected(item)
+            })}
+          >
+            {item.item.name}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

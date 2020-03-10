@@ -113,6 +113,10 @@ Selects.forEach(({ description, getComponent }) => {
         key: "h",
         keyCode: 72
       });
+      fireEvent.keyDown(selectElement, {
+        key: "i",
+        keyCode: 72
+      });
 
       fireEvent.keyDown(selectElement, {
         key: "Enter",
@@ -122,7 +126,7 @@ Selects.forEach(({ description, getComponent }) => {
       expect(selectElement.textContent).toBe("third");
     });
 
-    test("closes on `esc`", async () => {
+    test("closes on `esc`", () => {
       const {
         getByTestId,
         getAllByTestId,
@@ -144,7 +148,7 @@ Selects.forEach(({ description, getComponent }) => {
         keyCode: 27
       });
 
-      await wait(() => {
+      wait(() => {
         expect(queryByTestId("filterInput")).not.toBeVisible();
       });
     });

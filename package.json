@@ -23,7 +23,9 @@
     "deploy": "gh-pages -d example/build"
   },
   "dependencies": {
-    "keycode": "^2.2.0"
+    "@xstate/react": "^0.8.1",
+    "keycode": "^2.2.0",
+    "xstate": "^4.8.0"
   },
   "peerDependencies": {
     "react": "^16.9.0"

@@ -1,4 +1,16 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useMachine } from "@xstate/react";
+import selectMachine, {
+  KEY_DOWN_DOWN,
+  KEY_DOWN_UP,
+  KEY_DOWN_SPACE,
+  KEY_DOWN_ENTER,
+  KEY_DOWN_ESC,
+  KEY_DOWN_TAB,
+  CLICK_TRIGGER,
+  CLICK_ITEM,
+  UPDATE_FILTER
+} from "./selectMachine";
 import useList from "./useList";
 import useFilterInput from "./useFilterInput";
 import useEphemeralString from "./useEphemeralString";
@@ -30,48 +42,15 @@ function useSelect({
   autoTargetFirstItem,
   filterString: controlledFilterString
 }: IuseSelect<Item>) {
-  const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<Item | null>(null);
   const [uncontrolledFilterString, setUncontrolledFilterString] = useState("");
+
   const isControlledFiltering = useMemo(() => !!controlledFilterString, [
     controlledFilterString
   ]);
   const filterString = useMemo(
     () => controlledFilterString || uncontrolledFilterString,
     [controlledFilterString, uncontrolledFilterString]
-  );
-
-  const handleChangeFilter = useCallback(
-    filterString => {
-      if (!isControlledFiltering) {
-        setUncontrolledFilterString(filterString);
-      }
-      onChangeFilter && onChangeFilter(filterString);
-    },
-    [onChangeFilter, isControlledFiltering]
-  );
-
-  const close = useCallback(() => {
-    handleChangeFilter("");
-    setIsOpen(false);
-  }, [setUncontrolledFilterString, setIsOpen]);
-
-  const handleClickTrigger = useCallback(() => {
-    setIsOpen(!isOpen);
-    handleChangeFilter("");
-  }, [isOpen]);
-
-  const handleSelectOption = useCallback(
-    decoratedItem => {
-      if (isOpen) {
-        if (!!decoratedItem) {
-          onSelectOption(decoratedItem.item);
-        }
-        setActiveItem(null);
-        close();
-      }
-    },
-    [close, onSelectOption, isOpen]
   );
 
   const {
@@ -94,38 +73,32 @@ function useSelect({
     itemMatchesFilter,
     selected,
     autoTargetFirstItem,
-    onSelectItem: handleSelectOption
+    onClickItem: handleClickItem
   });
 
-  const handleKeyDownFilter = useCallback(
-    e => {
-      switch (keycode(e.which)) {
-        case "up":
-          decrementActiveItem();
-          e.preventDefault();
-          return;
-        case "down":
-          incrementActiveItem();
-          e.preventDefault();
-          return;
-        case "enter":
-          handleSelectOption(activeDecoratedItem);
-          return;
-        case "esc":
-        case "tab":
-          close();
-          return;
-        default:
-          return;
-      }
-    },
-    [
-      decrementActiveItem,
-      incrementActiveItem,
-      handleSelectOption,
-      activeDecoratedItem
-    ]
-  );
+  const handleKeyDownFilter = useCallback(e => {
+    switch (keycode(e.which)) {
+      case "up":
+        send(KEY_DOWN_UP);
+        e.preventDefault();
+        return;
+      case "down":
+        send(KEY_DOWN_DOWN);
+        e.preventDefault();
+        return;
+      case "enter":
+        send(KEY_DOWN_ENTER);
+        return;
+      case "esc":
+        send(KEY_DOWN_ESC);
+        return;
+      case "tab":
+        send(KEY_DOWN_TAB);
+        return;
+      default:
+        return;
+    }
+  }, []);
 
   const handleUpdateKeyboardFocused = useCallback(
     string => {
@@ -150,62 +123,79 @@ function useSelect({
     onUpdateValue: handleUpdateKeyboardFocused
   });
 
-  const handleKeydownSpaceSelect = useCallback(() => {
-    if (!isOpen) {
-      setIsOpen(true);
-    } else {
-      handleSelectOption(activeDecoratedItem);
-    }
-  }, [activeItem, handleSelectOption, setIsOpen, isOpen]);
-
   const { getFilterInputProps, ref: filterInputRef } = useFilterInput({
-    onChange: handleChangeFilter,
+    onChange: handleFilterStringChange,
     onKeyDown: handleKeyDownFilter
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      if (filterInputRef.current) {
-        filterInputRef.current.focus();
-      } else {
-        listRef.current && listRef.current.focus();
-      }
+  const [state, send] = useMachine(selectMachine, {
+    actions: {
+      decrementActiveItem,
+      incrementActiveItem,
+      handleSelectItem: (_, e: any) => {
+        const { item } = e;
+        switch (e.type) {
+          case CLICK_ITEM:
+            onSelectOption(item);
+            return;
+          default:
+            onSelectOption(activeDecoratedItem.item);
+            return;
+        }
+      },
+      clearActiveItem: () => setActiveItem(null)
+      // clearFilterString: () => handleChangeFilter("")
+    },
+    context: {
+      listRef,
+      filterInputRef,
+      activeDecoratedItem,
+      isControlledFiltering,
+      setUncontrolledFilterString,
+      onChangeFilter
     }
-  }, [isOpen, listRef, filterInputRef]);
+  });
+
+  function handleFilterStringChange(filterString: string) {
+    send({ type: UPDATE_FILTER, filterString });
+  }
+
+  function handleClickItem(decoratedItem: any) {
+    const { item } = decoratedItem;
+    send({
+      type: CLICK_ITEM,
+      item
+    });
+  }
 
   const handleKeyDownSelect = useCallback(
     e => {
       switch (keycode(e.which)) {
         case "up":
-          decrementActiveItem();
+          send(KEY_DOWN_UP);
           e.preventDefault();
           return;
         case "down":
-          incrementActiveItem();
+          send(KEY_DOWN_DOWN);
           e.preventDefault();
           return;
         case "space":
-          handleKeydownSpaceSelect();
+          send(KEY_DOWN_SPACE);
           return;
         case "enter":
-          handleSelectOption(activeDecoratedItem);
+          send(KEY_DOWN_ENTER);
           return;
         case "esc":
+          send(KEY_DOWN_ESC);
+          return;
         case "tab":
-          close();
+          send(KEY_DOWN_TAB);
           return;
         default:
           handleKeyboardEvent(e);
       }
     },
-    [
-      decrementActiveItem,
-      incrementActiveItem,
-      handleKeydownSpaceSelect,
-      handleSelectOption,
-      activeDecoratedItem,
-      handleKeyboardEvent
-    ]
+    [handleKeyboardEvent]
   );
 
   const getSelectProps = useCallback(() => {
@@ -213,9 +203,11 @@ function useSelect({
       tabIndex: 0,
       onKeyDown: handleKeyDownSelect,
       "data-testid": "select",
-      onClick: handleClickTrigger
+      onClick: () => send(CLICK_TRIGGER)
     };
   }, [handleKeyDownSelect]);
+
+  const isOpen = useMemo(() => state.value === "open", [state]);
 
   return {
     isOpen,
@@ -226,7 +218,8 @@ function useSelect({
     getFilterInputProps,
     getSelectProps,
     isItemActive,
-    isItemSelected
+    isItemSelected,
+    state
   };
 }
 

@@ -43,14 +43,14 @@ function ControlledFilterStringControlledFilteringSelect({
   );
 
   const {
-    isOpen,
     getItemProps,
     getListProps,
     getFilterInputProps,
     getSelectProps,
     isItemActive,
     isItemSelected,
-    decoratedItems
+    decoratedItems,
+    isOpen
   } = useSelect({
     onSelectOption: setSelected,
     items: filteredItems,
