@@ -82,7 +82,7 @@ function useCombobox({
     setActiveItem,
     filterString: value,
     itemMatchesFilter,
-    onSelectItem: handleSelectOption,
+    onClickItem: handleSelectOption,
     autoTargetFirstItem: autoTargetFirstItem,
     additionalItemProps: {
       onMouseDown: () => handleSelectOption(activeDecoratedItem)

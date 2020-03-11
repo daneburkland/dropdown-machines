@@ -186,10 +186,9 @@ function useList<T>({
     };
   }, []);
 
-  const activeDecoratedItem = useMemo(
-    () => filteredDecoratedItems[activeItemIndex],
-    [filteredDecoratedItems, activeItemIndex]
-  );
+  const activeDecoratedItem = useMemo(() => {
+    return filteredDecoratedItems[activeItemIndex];
+  }, [filteredDecoratedItems, activeItemIndex]);
 
   const scrollDecoratedItemIntoView = useCallback(decoratedItem => {
     const { ref } = decoratedItem;

@@ -144,7 +144,6 @@ function useSelect({
         }
       },
       clearActiveItem: () => setActiveItem(null)
-      // clearFilterString: () => handleChangeFilter("")
     },
     context: {
       listRef,

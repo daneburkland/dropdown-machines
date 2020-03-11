@@ -12,12 +12,13 @@ export const CLICK_ITEM = "CLICK_ITEM";
 export const KEY_DOWN_SPACE = "KEY_DOWN_SPACE";
 export const UPDATE_FILTER = "UPDATE_FILTER";
 
-interface IContext {
+export interface IContext {
   isControlledFiltering: boolean;
   listRef: RefObject<HTMLElement>;
-  filterInputRef: RefObject<HTMLElement>;
+  filterInputRef: RefObject<HTMLInputElement>;
   setUncontrolledFilterString(value: string): void;
   onChangeFilter(value: string): void;
+  activeDecoratedItem: any;
 }
 
 const selectMachine = Machine(
@@ -36,10 +37,13 @@ const selectMachine = Machine(
             actions: "incrementActiveItem"
           },
           [KEY_DOWN_SPACE]: {
+            target: "closed",
+            // cond: { type: "canSelectItem" },
             actions: "handleSelectItem"
           },
           [KEY_DOWN_ENTER]: {
             target: "closed",
+            // cond: { type: "canSelectItem" },
             actions: ["handleSelectItem"]
           },
           [KEY_DOWN_ESC]: {
@@ -73,6 +77,12 @@ const selectMachine = Machine(
     }
   },
   {
+    guards: {
+      canSelectItem: (context: IContext) => {
+        const { activeDecoratedItem } = context;
+        return !!activeDecoratedItem;
+      }
+    },
     actions: {
       focus: ({ listRef, filterInputRef }: IContext) => {
         // Move this to the bottom of the stack to allow DOM to transition
@@ -89,12 +99,14 @@ const selectMachine = Machine(
         setUncontrolledFilterString,
         onChangeFilter,
         filterInputRef
-      }) => {
+      }: IContext) => {
         if (!isControlledFiltering) {
           setUncontrolledFilterString("");
         }
         onChangeFilter && onChangeFilter("");
-        filterInputRef.current.value = "";
+        if (filterInputRef.current) {
+          filterInputRef.current.value = "";
+        }
       },
       handleUpdateFilter: (
         {
