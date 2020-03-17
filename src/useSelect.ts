@@ -1,4 +1,11 @@
-import { useState, useCallback, useMemo } from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  createRef,
+  useEffect,
+  ChangeEvent
+} from "react";
 import { useMachine } from "@xstate/react";
 import selectMachine, {
   KEY_DOWN_DOWN,
@@ -9,10 +16,11 @@ import selectMachine, {
   KEY_DOWN_TAB,
   CLICK_TRIGGER,
   CLICK_ITEM,
-  UPDATE_FILTER
+  UPDATE_FILTER,
+  SET_ACTIVE_ITEM,
+  UPDATE_SELECTED,
+  UPDATE_DECORATED_ITEMS
 } from "./selectMachine";
-import useList from "./useList";
-import useFilterInput from "./useFilterInput";
 import useEphemeralString from "./useEphemeralString";
 import { DecoratedItem } from "./index";
 import keycode from "keycode";
@@ -28,7 +36,7 @@ interface IuseSelect<T> {
   itemMatchesFilter?(item: T, filterString: string): boolean;
   onChangeFilter?(filterString: string): void;
   selected: null | T | Array<T>;
-  onSelectOption(item: T | null): void;
+  onSelectOption(item: T | null, selected: T | Array<T>): void;
   filterString?: string;
   autoTargetFirstItem?: boolean;
 }
@@ -38,43 +46,53 @@ function useSelect({
   itemMatchesFilter,
   selected,
   onSelectOption,
-  onChangeFilter,
-  autoTargetFirstItem,
-  filterString: controlledFilterString
-}: IuseSelect<Item>) {
-  const [activeItem, setActiveItem] = useState<Item | null>(null);
-  const [uncontrolledFilterString, setUncontrolledFilterString] = useState("");
+  onChangeFilter
+}: // autoTargetFirstItem,
+IuseSelect<Item>) {
+  const listRef = useRef<HTMLUListElement>(null);
+  const filterInputRef = useRef<HTMLInputElement>(null);
 
-  const isControlledFiltering = useMemo(() => !!controlledFilterString, [
-    controlledFilterString
-  ]);
-  const filterString = useMemo(
-    () => controlledFilterString || uncontrolledFilterString,
-    [controlledFilterString, uncontrolledFilterString]
+  // TODO: need effect after useMachine to send update to items?
+  const decoratedItems = useMemo(() => {
+    return items.map(item => ({ item, ref: createRef<HTMLLIElement>() }));
+  }, [items]);
+
+  const defaultItemDisplayValue = useCallback(decoratedItem => {
+    return decoratedItem.ref.current?.innerHTML.toLowerCase();
+  }, []);
+
+  const defaultItemMatchesFilterString = useCallback(
+    (
+      decoratedItem: DecoratedItem<HTMLLIElement, Item>,
+      filterString: string
+    ) => {
+      if (!decoratedItem.ref.current) return false;
+      return (
+        defaultItemDisplayValue(decoratedItem).indexOf(
+          filterString.toLocaleLowerCase()
+        ) > -1
+      );
+    },
+    []
   );
 
-  const {
-    decoratedItems,
-    getItemProps,
-    getListProps,
-    isItemActive,
-    isItemSelected,
-    listRef,
-    decrementActiveItem,
-    incrementActiveItem,
-    defaultItemMatchesFilterString,
-    scrollDecoratedItemIntoView,
-    activeDecoratedItem
-  } = useList({
-    activeItem,
-    setActiveItem,
-    items,
-    filterString,
-    itemMatchesFilter,
-    selected,
-    autoTargetFirstItem,
-    onClickItem: handleClickItem
-  });
+  // TODO: this should fire event
+
+  // useEffect(() => {
+  //   if (autoTargetFirstItem && !!filteredDecoratedItems.length) {
+  //     setActiveItem(filteredDecoratedItems[0].item);
+  //   } else if (!filteredDecoratedItems.length) {
+  //     setActiveItem(null);
+  //   }
+  // }, [filterString]);
+
+  // TODO: this can be derived in state machine
+
+  // const scrollDecoratedItemIntoView = useCallback(decoratedItem => {
+  //   const { ref } = decoratedItem;
+  //   if (!ref.current?.scrollIntoView) return;
+  //   adjustScroll(decoratedItem);
+  // }, []);
 
   const handleKeyDownFilter = useCallback(e => {
     switch (keycode(e.which)) {
@@ -100,64 +118,99 @@ function useSelect({
     }
   }, []);
 
-  const handleUpdateKeyboardFocused = useCallback(
-    string => {
-      const firstMatch = decoratedItems.find(
-        (decoratedItem: DecoratedItem<HTMLElement, object>) => {
-          if (itemMatchesFilter) {
-            return itemMatchesFilter(decoratedItem.item, string);
-          } else {
-            return defaultItemMatchesFilterString(decoratedItem, string);
-          }
-        }
-      );
-      if (firstMatch) {
-        setActiveItem(firstMatch.item);
-        scrollDecoratedItemIntoView(firstMatch);
-      }
-    },
-    [decoratedItems, itemMatchesFilter]
-  );
-
   const { handleKeyboardEvent } = useEphemeralString({
     onUpdateValue: handleUpdateKeyboardFocused
   });
 
-  const { getFilterInputProps, ref: filterInputRef } = useFilterInput({
-    onChange: handleFilterStringChange,
-    onKeyDown: handleKeyDownFilter
-  });
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    send({
+      type: UPDATE_FILTER,
+      filterString: e.target.value
+    });
+    e.preventDefault();
+  };
+
+  const getFilterInputProps = useCallback(
+    () => ({
+      onChange: handleInputChange,
+      onKeyDown: handleKeyDownFilter,
+      "data-testid": "filterInput",
+      ref: filterInputRef
+    }),
+    [handleInputChange, handleKeyDownFilter]
+  );
 
   const [state, send] = useMachine(selectMachine, {
-    actions: {
-      decrementActiveItem,
-      incrementActiveItem,
-      handleSelectItem: (_, e: any) => {
-        const { item } = e;
-        switch (e.type) {
-          case CLICK_ITEM:
-            onSelectOption(item);
-            return;
-          default:
-            onSelectOption(activeDecoratedItem.item);
-            return;
-        }
-      },
-      clearActiveItem: () => setActiveItem(null)
-    },
     context: {
+      // TODO: pass the actual elements into context
       listRef,
       filterInputRef,
-      activeDecoratedItem,
-      isControlledFiltering,
-      setUncontrolledFilterString,
-      onChangeFilter
+      onChangeFilter,
+      decoratedItems,
+      // TODO: how to default this
+      filteredDecoratedItems: decoratedItems,
+      itemMatchesFilter,
+      onSelectOption,
+      selected
     }
   });
 
-  function handleFilterStringChange(filterString: string) {
-    send({ type: UPDATE_FILTER, filterString });
+  useEffect(() => {
+    send(UPDATE_SELECTED, { selected });
+  }, [selected]);
+
+  useEffect(() => {
+    send(UPDATE_DECORATED_ITEMS, { decoratedItems });
+  }, [decoratedItems]);
+
+  const getItemProps = (decoratedItem: DecoratedItem<HTMLLIElement, Item>) => {
+    const { ref } = decoratedItem;
+    return {
+      ref,
+      onMouseMove: () => send({ type: SET_ACTIVE_ITEM, decoratedItem }),
+      onClick: () => handleClickItem(decoratedItem),
+      "data-testid": "option"
+    };
+  };
+
+  const getListProps = useCallback(() => {
+    return {
+      ref: listRef,
+      "data-testid": "listBox"
+    };
+  }, []);
+
+  function handleUpdateKeyboardFocused(string: string) {
+    const firstMatch = decoratedItems.find(
+      (decoratedItem: DecoratedItem<HTMLLIElement, Item>) => {
+        if (itemMatchesFilter) {
+          return itemMatchesFilter(decoratedItem.item, string);
+        } else {
+          return defaultItemMatchesFilterString(decoratedItem, string);
+        }
+      }
+    );
+    if (firstMatch) {
+      send({
+        type: SET_ACTIVE_ITEM,
+        item: firstMatch
+      });
+      // scrollDecoratedItemIntoView(firstMatch);
+    }
   }
+
+  const isItemActive = (decoratedItem: DecoratedItem<HTMLLIElement, Item>) => {
+    const { activeItemIndex, decoratedItems } = state.context;
+    return decoratedItem.item === decoratedItems[activeItemIndex]?.item;
+  };
+
+  const isItemSelected = ({ item }: { item: Item }) => {
+    if (isArray(selected)) {
+      return selected.includes(item);
+    } else {
+      return item === selected;
+    }
+  };
 
   function handleClickItem(decoratedItem: any) {
     const { item } = decoratedItem;
@@ -211,14 +264,15 @@ function useSelect({
   return {
     isOpen,
     listRef,
-    decoratedItems,
+    decoratedItems: state.context.filteredDecoratedItems,
     getItemProps,
     getListProps,
     getFilterInputProps,
     getSelectProps,
     isItemActive,
     isItemSelected,
-    state
+    state,
+    selected
   };
 }
 

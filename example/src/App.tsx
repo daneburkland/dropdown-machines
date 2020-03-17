@@ -28,36 +28,36 @@ function App() {
       <div className="m-4">
         <MultiSelect items={items} />
       </div>
-      <h3>Uncontrolled filterString; uncontrolled filtering select</h3>
+      <h3>filtering select</h3>
       <div className="m-4">
         <UncontrolledFilterStringUncontrolledFilteringSelect items={items} />
       </div>
-      <h3>Controlled filterString; uncontrolled filtering select</h3>
+      {/* <h3>uncontrolled filtering select</h3>
       <div className="m-4">
         <ControlledFilterStringUncontrolledFilteringSelect items={items} />
-      </div>
-      <h3>Uncontrolled filterString; controlled filtering select</h3>
+      </div> */}
+      {/* <h3>controlled filtering select</h3>
       <div className="m-4">
         <UncontrolledFilterStringControlledFilteringSelect items={items} />
-      </div>
-      <h3>Controlled filterString; controlled filtering select</h3>
+      </div> */}
+      {/* <h3>controlled filtering select</h3>
       <div className="m-4">
         <ControlledFilterStringControlledFilteringSelect items={items} />
-      </div>
-      <h3>Uncontrolled filterString; uncontrolled filtering multi-select</h3>
+      </div> */}
+      <h3>filtering multi-select</h3>
       <div className="m-4">
         <UncontrolledFilterStringUncontrolledFilteringMultiSelect
           items={items}
         />
       </div>
-      <h3>Uncontrolled filterString; controlled filtering multi-select</h3>
+      {/* <h3>controlled filtering multi-select</h3>
       <div className="m-4">
         <UncontrolledFilterStringControlledFilteringMultiSelect items={items} />
-      </div>
-      <h3>Controlled filterString; controlled filtering multi-select</h3>
+      </div> */}
+      {/* <h3>controlled filtering multi-select</h3>
       <div className="m-4">
         <ControlledFilterStringControlledFilteringMultiSelect items={items} />
-      </div>
+      </div> */}
       <h3>Combobox</h3>
       <div className="m-4">
         <Combobox items={items} />

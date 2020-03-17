@@ -50,7 +50,7 @@ interface IMultiSelectProps {
 function MultiSelect({ items, autoTargetFirstItem }: IMultiSelectProps) {
   const [selected, setSelected] = useState<Array<Item>>([]);
 
-  function handleSelectOption(item: any) {
+  function handleSelectOption(item: any, selected: Array<Item>) {
     if (selected.includes(item)) {
       setSelected(selected.filter(selectedItem => selectedItem !== item));
     } else {

@@ -48,7 +48,7 @@ function useList<T>({
   }, []);
 
   const defaultItemMatchesFilterString = useCallback(
-    (decoratedItem: DecoratedItem<HTMLElement, T>, filterString: string) => {
+    (decoratedItem: DecoratedItem<HTMLLIElement, T>, filterString: string) => {
       if (!decoratedItem.ref.current) return false;
       return (
         defaultItemDisplayValue(decoratedItem).indexOf(

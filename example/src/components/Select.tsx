@@ -59,13 +59,13 @@ function Select({ items, autoTargetFirstItem }: IFilterableSelectProps) {
         {decoratedItems.map(decoratedItem => (
           <li
             {...getItemProps(decoratedItem)}
-            key={decoratedItem.item.id}
+            key={decoratedItem.item?.id}
             className={classnames(itemStyles, {
               "bg-gray-200": isItemActive(decoratedItem),
               "bg-gray-400": isItemSelected(decoratedItem)
             })}
           >
-            {decoratedItem.item.name}
+            {decoratedItem.item?.name}
           </li>
         ))}
       </ul>
