@@ -8,11 +8,6 @@ import {
 } from "react";
 import { useMachine } from "@xstate/react";
 import selectMachine, {
-  KEY_DOWN_DOWN,
-  KEY_DOWN_UP,
-  KEY_DOWN_ENTER,
-  KEY_DOWN_ESC,
-  KEY_DOWN_TAB,
   CLICK_TRIGGER,
   CLICK_ITEM,
   UPDATE_FILTER,
@@ -22,7 +17,6 @@ import selectMachine, {
   KEY_DOWN_FILTER
 } from "./selectMachine";
 import { DecoratedItem } from "./index";
-import keycode from "keycode";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
@@ -74,30 +68,6 @@ function useSelect({
     []
   );
 
-  const handleKeyDownFilter = useCallback(e => {
-    switch (keycode(e.which)) {
-      case "up":
-        send(KEY_DOWN_UP);
-        e.preventDefault();
-        return;
-      case "down":
-        send(KEY_DOWN_DOWN);
-        e.preventDefault();
-        return;
-      case "enter":
-        send(KEY_DOWN_ENTER);
-        return;
-      case "esc":
-        send(KEY_DOWN_ESC);
-        return;
-      case "tab":
-        send(KEY_DOWN_TAB);
-        return;
-      default:
-        return;
-    }
-  }, []);
-
   const [state, send] = useMachine(selectMachine, {
     context: {
       // TODO: pass the actual elements into context
@@ -119,7 +89,7 @@ function useSelect({
     send({
       type: UPDATE_FILTER,
       filterString: e.target.value
-    } as any);
+    });
     e.preventDefault();
   };
 
@@ -131,8 +101,12 @@ function useSelect({
     const { ref } = decoratedItem;
     return {
       ref,
-      onMouseMove: () => send({ type: SET_ACTIVE_ITEM, decoratedItem } as any),
-      onClick: () => handleClickItem(decoratedItem),
+      onMouseMove: () => send({ type: SET_ACTIVE_ITEM, decoratedItem }),
+      onClick: () =>
+        send({
+          type: CLICK_ITEM,
+          item: decoratedItem.item
+        }),
       "data-testid": "option"
     };
   };
@@ -141,6 +115,29 @@ function useSelect({
     return {
       ref: listRef,
       "data-testid": "listBox"
+    };
+  }, []);
+
+  const getFilterInputProps = useCallback(
+    () => ({
+      onChange: handleInputChange,
+      onKeyDown: (e: any) => {
+        send({ type: KEY_DOWN_FILTER, e });
+      },
+      "data-testid": "filterInput",
+      ref: filterInputRef
+    }),
+    [handleInputChange]
+  );
+
+  const getSelectProps = useCallback(() => {
+    return {
+      tabIndex: 0,
+      onKeyDown: (e: any) => {
+        send({ type: KEY_DOWN_SELECT, e });
+      },
+      "data-testid": "select",
+      onClick: () => send(CLICK_TRIGGER)
     };
   }, []);
 
@@ -156,37 +153,6 @@ function useSelect({
       return item === selected;
     }
   };
-
-  function handleClickItem(decoratedItem: any) {
-    const { item } = decoratedItem;
-    send({
-      type: CLICK_ITEM,
-      item
-    } as any);
-  }
-
-  const getFilterInputProps = useCallback(
-    () => ({
-      onChange: handleInputChange,
-      onKeyDown: (e: any) => {
-        send({ type: KEY_DOWN_FILTER, e });
-      },
-      "data-testid": "filterInput",
-      ref: filterInputRef
-    }),
-    [handleInputChange, handleKeyDownFilter]
-  );
-
-  const getSelectProps = useCallback(() => {
-    return {
-      tabIndex: 0,
-      onKeyDown: (e: any) => {
-        send({ type: KEY_DOWN_SELECT, e });
-      },
-      "data-testid": "select",
-      onClick: () => send(CLICK_TRIGGER)
-    };
-  }, []);
 
   const isOpen = useMemo(() => state.value === "open", [state.value]);
 
