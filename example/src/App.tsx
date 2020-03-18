@@ -1,13 +1,8 @@
 import React from "react";
 import Select from "./components/Select";
 import MultiSelect from "./components/MultiSelect";
-import UncontrolledFilterStringUncontrolledFilteringSelect from "./components/UncontrolledFilterStringUncontrolledFilteringSelect";
-import ControlledFilterStringUncontrolledFilteringSelect from "./components/ControlledFilterStringUncontrolledFilteringSelect";
-import UncontrolledFilterStringControlledFilteringSelect from "./components/UncontrolledFilterStringControlledFilteringSelect";
-import ControlledFilterStringControlledFilteringSelect from "./components/ControlledFilterStringControlledFilteringSelect";
-import UncontrolledFilterStringUncontrolledFilteringMultiSelect from "./components/UncontrolledFilterStringUncontrolledFilteringMultiSelect";
-import UncontrolledFilterStringControlledFilteringMultiSelect from "./components/UncontrolledFilterStringControlledFilteringMultiSelect";
-import ControlledFilterStringControlledFilteringMultiSelect from "./components/ControlledFilterStringControlledFilteringMultiSelect";
+import FilterSelect from "./components/FilterSelect";
+import FilterMultiSelect from "./components/FilterMultiSelect";
 import Combobox from "./components/Combobox";
 import ComboboxAutoSelect from "./components/ComboboxAutoSelect";
 import ComboboxInlineAutoSelect from "./components/ComboboxInlineAutoSelect";
@@ -20,7 +15,7 @@ function App() {
       <div className="m-4">
         <Select items={items} />
       </div>
-      <h3>Select with autoTargetFirstItem</h3>
+      <h3>Select; autoTargetFirstItem</h3>
       <div className="m-4">
         <Select items={items} autoTargetFirstItem />
       </div>
@@ -28,36 +23,22 @@ function App() {
       <div className="m-4">
         <MultiSelect items={items} />
       </div>
-      <h3>filtering select</h3>
+      <h3>Filtering select</h3>
       <div className="m-4">
-        <UncontrolledFilterStringUncontrolledFilteringSelect items={items} />
+        <FilterSelect items={items} />
       </div>
-      {/* <h3>uncontrolled filtering select</h3>
+      <h3>Filtering select; autoTargetFirstItem</h3>
       <div className="m-4">
-        <ControlledFilterStringUncontrolledFilteringSelect items={items} />
-      </div> */}
-      {/* <h3>controlled filtering select</h3>
-      <div className="m-4">
-        <UncontrolledFilterStringControlledFilteringSelect items={items} />
-      </div> */}
-      {/* <h3>controlled filtering select</h3>
-      <div className="m-4">
-        <ControlledFilterStringControlledFilteringSelect items={items} />
-      </div> */}
-      <h3>filtering multi-select</h3>
-      <div className="m-4">
-        <UncontrolledFilterStringUncontrolledFilteringMultiSelect
-          items={items}
-        />
+        <FilterSelect items={items} autoTargetFirstItem />
       </div>
-      {/* <h3>controlled filtering multi-select</h3>
+      <h3>Filtering multi-select</h3>
       <div className="m-4">
-        <UncontrolledFilterStringControlledFilteringMultiSelect items={items} />
-      </div> */}
-      {/* <h3>controlled filtering multi-select</h3>
+        <FilterMultiSelect items={items} />
+      </div>
+      <h3>Filtering multi-select; autoTargetFirstItem</h3>
       <div className="m-4">
-        <ControlledFilterStringControlledFilteringMultiSelect items={items} />
-      </div> */}
+        <FilterMultiSelect items={items} autoTargetFirstItem />
+      </div>
       <h3>Combobox</h3>
       <div className="m-4">
         <Combobox items={items} />

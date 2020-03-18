@@ -16,7 +16,6 @@ export const UPDATE_FILTER = "UPDATE_FILTER";
 export const FILTER_ITEMS = "FILTER_ITEMS";
 export const SET_ACTIVE_ITEM = "SET_ACTIVE_ITEM";
 export const UPDATE_SELECTED = "UPDATE_SELECTED";
-export const UPDATE_DECORATED_ITEMS = "UPDATE_DECORATED_ITEMS";
 
 type T = any;
 
@@ -32,6 +31,7 @@ export interface IContext {
   itemMatchesFilter: any;
   onSelectOption(item: T, selected: T | Array<T>): void;
   selected: Array<T> | T;
+  autoTargetFirstItem: boolean;
 }
 
 const getActiveDecoratedItem = ({
@@ -82,6 +82,16 @@ const filterItems = ({
   return decoratedItems;
 };
 
+const updateActiveItemIndex = ({
+  activeItemIndex,
+  autoTargetFirstItem
+}: IContext) => {
+  console.log(autoTargetFirstItem);
+  if (autoTargetFirstItem) {
+    return 0;
+  } else return activeItemIndex;
+};
+
 const selectMachine = Machine<IContext>(
   {
     id: "select",
@@ -89,7 +99,10 @@ const selectMachine = Machine<IContext>(
     states: {
       open: {
         exit: ["clearFilterString", "clearActiveItem"],
-        entry: ["focus"],
+        entry: [
+          "focus",
+          assign<IContext>({ activeItemIndex: updateActiveItemIndex })
+        ],
         on: {
           [KEY_DOWN_UP]: {
             actions: [
@@ -130,7 +143,8 @@ const selectMachine = Machine<IContext>(
             actions: [
               assign({ filterString: (_, { filterString }) => filterString }),
               "handleUpdateFilter",
-              assign<IContext>({ filteredDecoratedItems: filterItems })
+              assign<IContext>({ filteredDecoratedItems: filterItems }),
+              assign<IContext>({ activeItemIndex: updateActiveItemIndex })
             ]
           },
           [SET_ACTIVE_ITEM]: {
@@ -138,13 +152,6 @@ const selectMachine = Machine<IContext>(
               assign<IContext>({
                 activeItemIndex: ({ decoratedItems }, { decoratedItem }: any) =>
                   decoratedItems.indexOf(decoratedItem)
-              })
-            ]
-          },
-          [UPDATE_DECORATED_ITEMS]: {
-            actions: [
-              assign({
-                decoratedItems: (_, { decoratedItems }) => decoratedItems
               })
             ]
           }

@@ -1,7 +1,7 @@
-import React, { useState, useCallback, MouseEvent } from "react";
+import React, { useState, MouseEvent } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
-import { itemMatchesFilter } from "./../utils";
+import { itemMatchesFilter } from "../utils";
 import {
   multiSelectStyles,
   pillStyles,
@@ -37,13 +37,11 @@ function SelectedItem({ item, onRemove }: ISelectedItemProps) {
 
 interface IMultiSelectProps {
   items: Array<Item>;
+  autoTargetFirstItem?: boolean;
 }
 
-function UncontrolledFilterStringControlledFilteringMultiSelect({
-  items
-}: IMultiSelectProps) {
+function FilterMultiSelect({ items, autoTargetFirstItem }: IMultiSelectProps) {
   const [selected, setSelected] = useState([items[0]]);
-  const [filteredItems, setFilteredItems] = useState(items);
 
   function handleSelectOption(item: any) {
     if (selected.includes(item)) {
@@ -57,16 +55,6 @@ function UncontrolledFilterStringControlledFilteringMultiSelect({
     setSelected(selected.filter(selectedItem => selectedItem !== item));
   }
 
-  const handleChangeFilter = useCallback(
-    filterString => {
-      const filteredItems = items.filter(item =>
-        itemMatchesFilter(item, filterString)
-      );
-      setFilteredItems(filteredItems);
-    },
-    [items]
-  );
-
   const {
     isOpen,
     decoratedItems,
@@ -78,9 +66,10 @@ function UncontrolledFilterStringControlledFilteringMultiSelect({
     isItemSelected
   } = useSelect({
     onSelectOption: handleSelectOption,
-    items: filteredItems,
-    onChangeFilter: handleChangeFilter,
-    selected
+    itemMatchesFilter,
+    items,
+    selected,
+    autoTargetFirstItem
   });
 
   return (
@@ -97,33 +86,37 @@ function UncontrolledFilterStringControlledFilteringMultiSelect({
           />
         ))}
       </div>
-      <div className={classnames(listBoxContainerStyles, { hidden: !isOpen })}>
-        <input
-          {...getFilterInputProps()}
-          className="outline-none"
-          type="text"
-          placeholder="Filter..."
-        />
-        <ul
-          {...getListProps()}
-          className={classnames(listBoxStyles, "relative")}
+      {isOpen && (
+        <div
+          className={classnames(listBoxContainerStyles, { hidden: !isOpen })}
         >
-          {decoratedItems.map((item: any, index) => (
-            <li
-              {...getItemProps(item)}
-              key={item.id || index}
-              className={classnames(itemStyles, {
-                "bg-gray-200": isItemActive(item),
-                "bg-gray-400": isItemSelected(item)
-              })}
-            >
-              {item.item.name}
-            </li>
-          ))}
-        </ul>
-      </div>
+          <input
+            {...getFilterInputProps()}
+            className="outline-none"
+            type="text"
+            placeholder="Filter..."
+          />
+          <ul
+            {...getListProps()}
+            className={classnames(listBoxStyles, "relative")}
+          >
+            {decoratedItems.map((decorated: any, index) => (
+              <li
+                {...getItemProps(decorated)}
+                key={decorated.id || index}
+                className={classnames(itemStyles, {
+                  "bg-gray-200": isItemActive(decorated),
+                  "bg-gray-400": isItemSelected(decorated)
+                })}
+              >
+                {decorated.item.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
 
-export default UncontrolledFilterStringControlledFilteringMultiSelect;
+export default FilterMultiSelect;

@@ -1,11 +1,12 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import classnames from "classnames";
 import { useSelect } from "use-dropdown";
+import { itemMatchesFilter } from "../utils";
 import {
   selectStyles,
   listBoxStyles,
-  listBoxContainerStyles,
-  itemStyles
+  itemStyles,
+  listBoxContainerStyles
 } from "./Select";
 
 type Item = {
@@ -17,42 +18,25 @@ interface IFilterableSelectProps {
   autoTargetFirstItem?: boolean;
 }
 
-function UncontrolledFilterStringUncontrolledFilteringSelect({
+function FilteringSelect({
   items,
   autoTargetFirstItem
 }: IFilterableSelectProps) {
   const [selected, setSelected] = useState<Item | null>(null);
-  const [filteredItems, setFilteredItems] = useState(items);
-
-  const itemMatchesFilter = useCallback((item: any, filterString: string) => {
-    return (
-      item.name.toLowerCase().indexOf(filterString.trim().toLowerCase()) > -1
-    );
-  }, []);
-
-  const handleChangeFilter = useCallback(
-    filterString => {
-      const filteredItems = items.filter(item =>
-        itemMatchesFilter(item, filterString)
-      );
-      setFilteredItems(filteredItems);
-    },
-    [items, itemMatchesFilter]
-  );
 
   const {
     isOpen,
+    decoratedItems,
     getItemProps,
     getListProps,
     getFilterInputProps,
     getSelectProps,
     isItemActive,
-    isItemSelected,
-    decoratedItems
+    isItemSelected
   } = useSelect({
     onSelectOption: setSelected,
-    items: filteredItems,
-    onChangeFilter: handleChangeFilter,
+    items,
+    itemMatchesFilter,
     selected,
     autoTargetFirstItem
   });
@@ -67,11 +51,7 @@ function UncontrolledFilterStringUncontrolledFilteringSelect({
       >
         {!!selected ? selected.name : ""}
       </div>
-      <div
-        className={classnames(listBoxContainerStyles, {
-          hidden: !isOpen
-        })}
-      >
+      <div className={classnames(listBoxContainerStyles, { hidden: !isOpen })}>
         <input
           {...getFilterInputProps()}
           className="outline-none"
@@ -100,4 +80,4 @@ function UncontrolledFilterStringUncontrolledFilteringSelect({
   );
 }
 
-export default UncontrolledFilterStringUncontrolledFilteringSelect;
+export default FilteringSelect;

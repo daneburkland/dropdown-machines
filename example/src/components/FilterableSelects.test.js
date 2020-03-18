@@ -1,7 +1,7 @@
 import React from "react";
 import { render, fireEvent, wait } from "@testing-library/react";
 import "@testing-library/jest-dom/extend-expect";
-import UncontrolledFilterStringUncontrolledFilteringSelect from "./UncontrolledFilterStringUncontrolledFilteringSelect";
+import FilteringSelect from "./FilterSelect";
 import ControlledFilterStringUncontrolledFilteringSelect from "./ControlledFilterStringUncontrolledFilteringSelect";
 import UncontrolledFilterStringControlledFilteringSelect from "./UncontrolledFilterStringControlledFilteringSelect";
 import ControlledFilterStringControlledFilteringSelect from "./ControlledFilterStringControlledFilteringSelect";
@@ -12,12 +12,7 @@ const Selects = [
   {
     description:
       "Basic Select with uncontrolled filterString and uncontrolled filtering",
-    getComponent: props => (
-      <UncontrolledFilterStringUncontrolledFilteringSelect
-        items={items}
-        {...props}
-      />
-    )
+    getComponent: props => <FilteringSelect items={items} {...props} />
   },
   {
     description:

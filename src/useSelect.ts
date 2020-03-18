@@ -18,8 +18,7 @@ import selectMachine, {
   CLICK_ITEM,
   UPDATE_FILTER,
   SET_ACTIVE_ITEM,
-  UPDATE_SELECTED,
-  UPDATE_DECORATED_ITEMS
+  UPDATE_SELECTED
 } from "./selectMachine";
 import useEphemeralString from "./useEphemeralString";
 import { DecoratedItem } from "./index";
@@ -46,13 +45,13 @@ function useSelect({
   itemMatchesFilter,
   selected,
   onSelectOption,
-  onChangeFilter
+  onChangeFilter,
+  autoTargetFirstItem
 }: // autoTargetFirstItem,
 IuseSelect<Item>) {
   const listRef = useRef<HTMLUListElement>(null);
   const filterInputRef = useRef<HTMLInputElement>(null);
 
-  // TODO: need effect after useMachine to send update to items?
   const decoratedItems = useMemo(() => {
     return items.map(item => ({ item, ref: createRef<HTMLLIElement>() }));
   }, [items]);
@@ -75,16 +74,6 @@ IuseSelect<Item>) {
     },
     []
   );
-
-  // TODO: this should fire event
-
-  // useEffect(() => {
-  //   if (autoTargetFirstItem && !!filteredDecoratedItems.length) {
-  //     setActiveItem(filteredDecoratedItems[0].item);
-  //   } else if (!filteredDecoratedItems.length) {
-  //     setActiveItem(null);
-  //   }
-  // }, [filterString]);
 
   // TODO: this can be derived in state machine
 
@@ -151,17 +140,14 @@ IuseSelect<Item>) {
       filteredDecoratedItems: decoratedItems,
       itemMatchesFilter,
       onSelectOption,
-      selected
+      selected,
+      autoTargetFirstItem
     }
   });
 
   useEffect(() => {
     send(UPDATE_SELECTED, { selected });
   }, [selected]);
-
-  useEffect(() => {
-    send(UPDATE_DECORATED_ITEMS, { decoratedItems });
-  }, [decoratedItems]);
 
   const getItemProps = (decoratedItem: DecoratedItem<HTMLLIElement, Item>) => {
     const { ref } = decoratedItem;
@@ -200,8 +186,8 @@ IuseSelect<Item>) {
   }
 
   const isItemActive = (decoratedItem: DecoratedItem<HTMLLIElement, Item>) => {
-    const { activeItemIndex, decoratedItems } = state.context;
-    return decoratedItem.item === decoratedItems[activeItemIndex]?.item;
+    const { activeItemIndex, filteredDecoratedItems } = state.context;
+    return decoratedItem.item === filteredDecoratedItems[activeItemIndex]?.item;
   };
 
   const isItemSelected = ({ item }: { item: Item }) => {
