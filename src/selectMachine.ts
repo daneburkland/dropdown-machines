@@ -1,8 +1,12 @@
-import { Machine, assign } from "xstate";
+import { Machine, assign, actions } from "xstate";
+import keycode from "keycode";
 import { RefObject } from "react";
+const { send, cancel } = actions;
 
 import { DecoratedItem } from "./index";
 
+export const KEY_DOWN_FILTER = "KEY_DOWN_FILTER";
+export const KEY_DOWN_SELECT = "KEY_DOWN_SELECT";
 export const KEY_DOWN_UP = "KEY_DOWN_UP";
 export const KEY_DOWN_DOWN = "KEY_DOWN_DOWN";
 export const KEY_DOWN_ENTER = "KEY_DOWN_ENTER";
@@ -16,6 +20,7 @@ export const UPDATE_FILTER = "UPDATE_FILTER";
 export const FILTER_ITEMS = "FILTER_ITEMS";
 export const SET_ACTIVE_ITEM = "SET_ACTIVE_ITEM";
 export const UPDATE_SELECTED = "UPDATE_SELECTED";
+export const CLEAR_EPHEMERAL_STRING = "CLEAR_EPHEMERAL_STRING";
 
 type T = any;
 
@@ -32,7 +37,37 @@ export interface IContext {
   onSelectOption(item: T, selected: T | Array<T>): void;
   selected: Array<T> | T;
   autoTargetFirstItem: boolean;
+  ephemeralString: string;
+  defaultItemMatchesFilterString(
+    decoratedItem: DecoratedItem<HTMLLIElement, T>,
+    filterString: string
+  ): void;
 }
+
+interface ISchema {
+  states: {
+    open: {};
+    closed: {};
+  };
+}
+
+type IEvent =
+  | { type: "KEY_DOWN_FILTER"; e: any }
+  | { type: "KEY_DOWN_SELECT"; e: any }
+  | { type: "KEY_DOWN_UP"; e: any }
+  | { type: "KEY_DOWN_DOWN"; e: any }
+  | { type: "KEY_DOWN_ENTER"; e: any }
+  | { type: "KEY_DOWN_ESC"; e: any }
+  | { type: "KEY_DOWN_TAB"; e: any }
+  | { type: "KEY_DOWN_OTHER"; e: any }
+  | { type: "CLICK_TRIGGER" }
+  | { type: "CLICK_ITEM"; item: any }
+  | { type: "KEY_DOWN_SPACE"; e: any }
+  | { type: "UPDATE_FILTER"; filterString: string }
+  | { type: "FILTER_ITEMS" }
+  | { type: "SET_ACTIVE_ITEM"; decoratedItem: DecoratedItem<HTMLLIElement, T> }
+  | { type: "UPDATE_SELECTED"; selected: any }
+  | { type: "CLEAR_EPHEMERAL_STRING" };
 
 const getActiveDecoratedItem = ({
   decoratedItems,
@@ -86,13 +121,75 @@ const updateActiveItemIndex = ({
   activeItemIndex,
   autoTargetFirstItem
 }: IContext) => {
-  console.log(autoTargetFirstItem);
   if (autoTargetFirstItem) {
     return 0;
   } else return activeItemIndex;
 };
 
-const selectMachine = Machine<IContext>(
+const updateEphemeralString = (
+  { ephemeralString = "" }: IContext,
+  { e }: any
+) => {
+  return ephemeralString.concat(String.fromCharCode(e.which).toLowerCase());
+};
+
+const fuzzyFindActiveItemIndex = ({
+  decoratedItems,
+  ephemeralString,
+  itemMatchesFilter,
+  defaultItemMatchesFilterString,
+  activeItemIndex
+}: IContext) => {
+  const firstMatch = decoratedItems.find(decoratedItem => {
+    if (itemMatchesFilter) {
+      return itemMatchesFilter(decoratedItem.item, ephemeralString);
+    } else {
+      return defaultItemMatchesFilterString(decoratedItem, ephemeralString);
+    }
+  });
+  if (!firstMatch) return activeItemIndex;
+  return decoratedItems.indexOf(firstMatch);
+};
+
+const getSelectKeyDownEvent = (_: IContext, { e }: any) => {
+  console.log("getting select event");
+  switch (keycode(e.which)) {
+    case "up":
+      return { type: KEY_DOWN_UP, e };
+    case "down":
+      return { type: KEY_DOWN_DOWN, e };
+    case "space":
+      return { type: KEY_DOWN_SPACE, e };
+    case "enter":
+      return { type: KEY_DOWN_ENTER, e };
+    case "esc":
+      return { type: KEY_DOWN_ESC, e };
+    case "tab":
+      return { type: KEY_DOWN_TAB, e };
+    default:
+      return { type: KEY_DOWN_OTHER, e };
+  }
+};
+
+const getFilterKeyDownEvent = (_: IContext, { e }: any) => {
+  switch (keycode(e.which)) {
+    case "up":
+      return { type: KEY_DOWN_UP, e };
+    case "down":
+      return { type: KEY_DOWN_DOWN, e };
+    case "enter":
+      return { type: KEY_DOWN_ENTER, e };
+    case "esc":
+      return { type: KEY_DOWN_ESC, e };
+    case "tab":
+      return { type: KEY_DOWN_TAB, e };
+    default:
+      // TODO: better way to bail?
+      return { type: "" };
+  }
+};
+
+const selectMachine = Machine<IContext, ISchema, IEvent>(
   {
     id: "select",
     initial: "closed",
@@ -104,6 +201,26 @@ const selectMachine = Machine<IContext>(
           assign<IContext>({ activeItemIndex: updateActiveItemIndex })
         ],
         on: {
+          [KEY_DOWN_SELECT]: {
+            actions: [send(getSelectKeyDownEvent)]
+          },
+          [KEY_DOWN_FILTER]: {
+            actions: [send(getFilterKeyDownEvent)]
+          },
+          [CLEAR_EPHEMERAL_STRING]: {
+            actions: assign<IContext>({ ephemeralString: () => "" })
+          },
+          [KEY_DOWN_OTHER]: {
+            actions: [
+              assign<IContext>({ ephemeralString: updateEphemeralString }),
+              assign<IContext>({ activeItemIndex: fuzzyFindActiveItemIndex }),
+              cancel("ephemeralStringTimeout"),
+              send(CLEAR_EPHEMERAL_STRING, {
+                delay: 350,
+                id: "ephemeralStringTimeout"
+              })
+            ]
+          },
           [KEY_DOWN_UP]: {
             actions: [
               assign<IContext>({ activeItemIndex: decrementActiveItem }),
@@ -149,8 +266,8 @@ const selectMachine = Machine<IContext>(
           },
           [SET_ACTIVE_ITEM]: {
             actions: [
-              assign<IContext>({
-                activeItemIndex: ({ decoratedItems }, { decoratedItem }: any) =>
+              assign({
+                activeItemIndex: ({ decoratedItems }, { decoratedItem }) =>
                   decoratedItems.indexOf(decoratedItem)
               })
             ]
@@ -178,7 +295,7 @@ const selectMachine = Machine<IContext>(
   },
   {
     guards: {
-      canSelectItem: ({ activeItemIndex }) => {
+      canSelectItem: ({ activeItemIndex }: IContext) => {
         return activeItemIndex !== undefined;
       }
     },
@@ -201,9 +318,6 @@ const selectMachine = Machine<IContext>(
         if (filterInputRef.current) {
           filterInputRef.current.value = "";
         }
-      },
-      handleUpdateSelected: (_, { selected }: any) => {
-        assign({ selected });
       },
 
       adjustScroll(context: IContext) {
@@ -247,11 +361,14 @@ const selectMachine = Machine<IContext>(
         onSelectOption,
         decoratedItems,
         selected
-      }) => {
+      }: IContext) => {
         onSelectOption(decoratedItems[activeItemIndex].item, selected);
       },
 
-      handleClickItem: ({ onSelectOption, selected }, { item }: any) => {
+      handleClickItem: (
+        { onSelectOption, selected }: IContext,
+        { item }: any
+      ) => {
         onSelectOption(item, selected);
       }
     }

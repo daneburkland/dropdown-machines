@@ -10,7 +10,6 @@ import { useMachine } from "@xstate/react";
 import selectMachine, {
   KEY_DOWN_DOWN,
   KEY_DOWN_UP,
-  KEY_DOWN_SPACE,
   KEY_DOWN_ENTER,
   KEY_DOWN_ESC,
   KEY_DOWN_TAB,
@@ -18,9 +17,10 @@ import selectMachine, {
   CLICK_ITEM,
   UPDATE_FILTER,
   SET_ACTIVE_ITEM,
-  UPDATE_SELECTED
+  UPDATE_SELECTED,
+  KEY_DOWN_SELECT,
+  KEY_DOWN_FILTER
 } from "./selectMachine";
-import useEphemeralString from "./useEphemeralString";
 import { DecoratedItem } from "./index";
 import keycode from "keycode";
 
@@ -47,8 +47,7 @@ function useSelect({
   onSelectOption,
   onChangeFilter,
   autoTargetFirstItem
-}: // autoTargetFirstItem,
-IuseSelect<Item>) {
+}: IuseSelect<Item>) {
   const listRef = useRef<HTMLUListElement>(null);
   const filterInputRef = useRef<HTMLInputElement>(null);
 
@@ -75,14 +74,6 @@ IuseSelect<Item>) {
     []
   );
 
-  // TODO: this can be derived in state machine
-
-  // const scrollDecoratedItemIntoView = useCallback(decoratedItem => {
-  //   const { ref } = decoratedItem;
-  //   if (!ref.current?.scrollIntoView) return;
-  //   adjustScroll(decoratedItem);
-  // }, []);
-
   const handleKeyDownFilter = useCallback(e => {
     switch (keycode(e.which)) {
       case "up":
@@ -107,28 +98,6 @@ IuseSelect<Item>) {
     }
   }, []);
 
-  const { handleKeyboardEvent } = useEphemeralString({
-    onUpdateValue: handleUpdateKeyboardFocused
-  });
-
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    send({
-      type: UPDATE_FILTER,
-      filterString: e.target.value
-    });
-    e.preventDefault();
-  };
-
-  const getFilterInputProps = useCallback(
-    () => ({
-      onChange: handleInputChange,
-      onKeyDown: handleKeyDownFilter,
-      "data-testid": "filterInput",
-      ref: filterInputRef
-    }),
-    [handleInputChange, handleKeyDownFilter]
-  );
-
   const [state, send] = useMachine(selectMachine, {
     context: {
       // TODO: pass the actual elements into context
@@ -139,11 +108,20 @@ IuseSelect<Item>) {
       // TODO: how to default this
       filteredDecoratedItems: decoratedItems,
       itemMatchesFilter,
+      defaultItemMatchesFilterString,
       onSelectOption,
       selected,
       autoTargetFirstItem
     }
   });
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    send({
+      type: UPDATE_FILTER,
+      filterString: e.target.value
+    } as any);
+    e.preventDefault();
+  };
 
   useEffect(() => {
     send(UPDATE_SELECTED, { selected });
@@ -153,7 +131,7 @@ IuseSelect<Item>) {
     const { ref } = decoratedItem;
     return {
       ref,
-      onMouseMove: () => send({ type: SET_ACTIVE_ITEM, decoratedItem }),
+      onMouseMove: () => send({ type: SET_ACTIVE_ITEM, decoratedItem } as any),
       onClick: () => handleClickItem(decoratedItem),
       "data-testid": "option"
     };
@@ -165,25 +143,6 @@ IuseSelect<Item>) {
       "data-testid": "listBox"
     };
   }, []);
-
-  function handleUpdateKeyboardFocused(string: string) {
-    const firstMatch = decoratedItems.find(
-      (decoratedItem: DecoratedItem<HTMLLIElement, Item>) => {
-        if (itemMatchesFilter) {
-          return itemMatchesFilter(decoratedItem.item, string);
-        } else {
-          return defaultItemMatchesFilterString(decoratedItem, string);
-        }
-      }
-    );
-    if (firstMatch) {
-      send({
-        type: SET_ACTIVE_ITEM,
-        item: firstMatch
-      });
-      // scrollDecoratedItemIntoView(firstMatch);
-    }
-  }
 
   const isItemActive = (decoratedItem: DecoratedItem<HTMLLIElement, Item>) => {
     const { activeItemIndex, filteredDecoratedItems } = state.context;
@@ -203,49 +162,33 @@ IuseSelect<Item>) {
     send({
       type: CLICK_ITEM,
       item
-    });
+    } as any);
   }
 
-  const handleKeyDownSelect = useCallback(
-    e => {
-      switch (keycode(e.which)) {
-        case "up":
-          send(KEY_DOWN_UP);
-          e.preventDefault();
-          return;
-        case "down":
-          send(KEY_DOWN_DOWN);
-          e.preventDefault();
-          return;
-        case "space":
-          send(KEY_DOWN_SPACE);
-          return;
-        case "enter":
-          send(KEY_DOWN_ENTER);
-          return;
-        case "esc":
-          send(KEY_DOWN_ESC);
-          return;
-        case "tab":
-          send(KEY_DOWN_TAB);
-          return;
-        default:
-          handleKeyboardEvent(e);
-      }
-    },
-    [handleKeyboardEvent]
+  const getFilterInputProps = useCallback(
+    () => ({
+      onChange: handleInputChange,
+      onKeyDown: (e: any) => {
+        send({ type: KEY_DOWN_FILTER, e });
+      },
+      "data-testid": "filterInput",
+      ref: filterInputRef
+    }),
+    [handleInputChange, handleKeyDownFilter]
   );
 
   const getSelectProps = useCallback(() => {
     return {
       tabIndex: 0,
-      onKeyDown: handleKeyDownSelect,
+      onKeyDown: (e: any) => {
+        send({ type: KEY_DOWN_SELECT, e });
+      },
       "data-testid": "select",
       onClick: () => send(CLICK_TRIGGER)
     };
-  }, [handleKeyDownSelect]);
+  }, []);
 
-  const isOpen = useMemo(() => state.value === "open", [state]);
+  const isOpen = useMemo(() => state.value === "open", [state.value]);
 
   return {
     isOpen,
