@@ -1,0 +1,28 @@
+import selectMachine, {
+  CLICK_TRIGGER,
+  CLICK_ITEM,
+  UPDATE_FILTER,
+  SET_ACTIVE_ITEM,
+  UPDATE_SELECTED,
+  KEY_DOWN_SELECT,
+  KEY_DOWN_FILTER,
+  UPDATE_DECORATED_ITEMS,
+  UPDATE_LIST_ELEMENT,
+  isItemActive,
+  isItemSelected
+} from "./selectMachine";
+
+export {
+  selectMachine,
+  CLICK_TRIGGER,
+  CLICK_ITEM,
+  UPDATE_FILTER,
+  SET_ACTIVE_ITEM,
+  UPDATE_SELECTED,
+  KEY_DOWN_SELECT,
+  KEY_DOWN_FILTER,
+  UPDATE_DECORATED_ITEMS,
+  UPDATE_LIST_ELEMENT,
+  isItemActive,
+  isItemSelected
+};

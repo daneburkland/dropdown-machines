@@ -14,9 +14,11 @@ import selectMachine, {
   SET_ACTIVE_ITEM,
   UPDATE_SELECTED,
   KEY_DOWN_SELECT,
-  KEY_DOWN_FILTER
-} from "./selectMachine";
-import { DecoratedItem } from "./index";
+  KEY_DOWN_FILTER,
+  isItemActive,
+  isItemSelected
+} from "../../../src/selectMachine";
+import { DecoratedItem } from "../../../src/index";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
@@ -71,8 +73,8 @@ function useSelect({
   const [state, send] = useMachine(selectMachine, {
     context: {
       // TODO: pass the actual elements into context
-      listRef,
-      filterInputRef,
+      listElement: listRef.current,
+      filterInputElement: filterInputRef.current,
       onChangeFilter,
       decoratedItems,
       // TODO: how to default this
@@ -140,19 +142,6 @@ function useSelect({
       onClick: () => send(CLICK_TRIGGER)
     };
   }, []);
-
-  const isItemActive = (decoratedItem: DecoratedItem<HTMLLIElement, Item>) => {
-    const { activeItemIndex, filteredDecoratedItems } = state.context;
-    return decoratedItem.item === filteredDecoratedItems[activeItemIndex]?.item;
-  };
-
-  const isItemSelected = ({ item }: { item: Item }) => {
-    if (isArray(selected)) {
-      return selected.includes(item);
-    } else {
-      return item === selected;
-    }
-  };
 
   const isOpen = useMemo(() => state.value === "open", [state.value]);
 

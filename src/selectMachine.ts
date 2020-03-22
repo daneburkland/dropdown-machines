@@ -1,9 +1,11 @@
 import { Machine, assign, actions } from "xstate";
 import keycode from "keycode";
-import { RefObject } from "react";
 const { send, cancel } = actions;
 
-import { DecoratedItem } from "./index";
+export type DecoratedItem<RefI, I> = {
+  ref: RefI;
+  item: I;
+};
 
 export const KEY_DOWN_FILTER = "KEY_DOWN_FILTER";
 export const KEY_DOWN_SELECT = "KEY_DOWN_SELECT";
@@ -21,12 +23,18 @@ export const FILTER_ITEMS = "FILTER_ITEMS";
 export const SET_ACTIVE_ITEM = "SET_ACTIVE_ITEM";
 export const UPDATE_SELECTED = "UPDATE_SELECTED";
 export const CLEAR_EPHEMERAL_STRING = "CLEAR_EPHEMERAL_STRING";
+export const UPDATE_DECORATED_ITEMS = "UPDATE_DECORATED_ITEMS";
+export const UPDATE_LIST_ELEMENT = "UPDATE_LIST_ELEMENT";
+
+export function isArray<T>(value: T | Array<T>): value is Array<T> {
+  return Array.isArray(value);
+}
 
 type T = any;
 
 export interface IContext {
-  listRef: RefObject<HTMLElement>;
-  filterInputRef: RefObject<HTMLInputElement>;
+  listElement: HTMLElement | null;
+  filterInputElement: HTMLInputElement;
   onChangeFilter(value: string): void;
   activeItemIndex: number;
   decoratedItems: Array<DecoratedItem<HTMLLIElement, T>>;
@@ -63,11 +71,16 @@ type IEvent =
   | { type: "CLICK_TRIGGER" }
   | { type: "CLICK_ITEM"; item: any }
   | { type: "KEY_DOWN_SPACE"; e: any }
+  | {
+      type: "UPDATE_DECORATED_ITEMS";
+      decoratedItems: Array<DecoratedItem<HTMLLIElement, T>>;
+    }
   | { type: "UPDATE_FILTER"; filterString: string }
   | { type: "FILTER_ITEMS" }
   | { type: "SET_ACTIVE_ITEM"; decoratedItem: DecoratedItem<HTMLLIElement, T> }
   | { type: "UPDATE_SELECTED"; selected: any }
-  | { type: "CLEAR_EPHEMERAL_STRING" };
+  | { type: "CLEAR_EPHEMERAL_STRING" }
+  | { type: "UPDATE_LIST_ELEMENT"; listElement: any };
 
 const getActiveDecoratedItem = ({
   decoratedItems,
@@ -152,7 +165,7 @@ const fuzzyFindActiveItemIndex = ({
 };
 
 const getSelectKeyDownEvent = (_: IContext, { e }: any) => {
-  console.log("getting select event");
+  console.log(keycode(e.which));
   switch (keycode(e.which)) {
     case "up":
       return { type: KEY_DOWN_UP, e };
@@ -186,6 +199,30 @@ const getFilterKeyDownEvent = (_: IContext, { e }: any) => {
     default:
       // TODO: better way to bail?
       return { type: "" };
+  }
+};
+
+const updateDecoratedItems = (_: IContext, { decoratedItems }: any) => {
+  return decoratedItems;
+};
+
+const updateListElement = (_: IContext, { listElement }: any) => {
+  return listElement;
+};
+
+export const isItemActive = (
+  decoratedItem: DecoratedItem<HTMLLIElement, T>,
+  context: IContext
+) => {
+  const { activeItemIndex, filteredDecoratedItems } = context;
+  return decoratedItem.item === filteredDecoratedItems[activeItemIndex]?.item;
+};
+
+export const isItemSelected = ({ item }: { item: T }, selected: Array<T>) => {
+  if (isArray(selected)) {
+    return selected.includes(item);
+  } else {
+    return item === selected;
   }
 };
 
@@ -267,8 +304,23 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
           [SET_ACTIVE_ITEM]: {
             actions: [
               assign({
-                activeItemIndex: ({ decoratedItems }, { decoratedItem }) =>
-                  decoratedItems.indexOf(decoratedItem)
+                activeItemIndex: ({ decoratedItems }, { decoratedItem }) => {
+                  return decoratedItems.indexOf(decoratedItem);
+                }
+              })
+            ]
+          },
+          [UPDATE_DECORATED_ITEMS]: {
+            actions: [
+              assign<IContext>({
+                decoratedItems: updateDecoratedItems
+              })
+            ]
+          },
+          [UPDATE_LIST_ELEMENT]: {
+            actions: [
+              assign<IContext>({
+                listElement: updateListElement
               })
             ]
           }
@@ -300,31 +352,30 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
       }
     },
     actions: {
-      focus: ({ listRef, filterInputRef }: IContext) => {
+      focus: ({ listElement, filterInputElement }: IContext) => {
         // Move this to the bottom of the stack to allow DOM to transition
         setTimeout(() => {
-          if (filterInputRef.current) {
-            filterInputRef.current.focus();
+          if (filterInputElement) {
+            filterInputElement.focus();
           } else {
-            listRef.current && listRef.current.focus();
+            listElement && listElement.focus();
           }
         }, 0);
       },
-      clearFilterString: ({ onChangeFilter, filterInputRef }: IContext) => {
+      clearFilterString: ({ onChangeFilter, filterInputElement }: IContext) => {
         assign({
           filterString: ""
         });
         onChangeFilter && onChangeFilter("");
-        if (filterInputRef.current) {
-          filterInputRef.current.value = "";
+        if (filterInputElement) {
+          filterInputElement.value = "";
         }
       },
 
       adjustScroll(context: IContext) {
         const activeDecoratedItem = getActiveDecoratedItem(context);
-        const { listRef } = context;
-        const activeItemElement = activeDecoratedItem.ref.current;
-        const listElement = listRef.current;
+        const { listElement } = context;
+        const activeItemElement = activeDecoratedItem.ref;
 
         if (!activeItemElement || !listElement) return;
 
