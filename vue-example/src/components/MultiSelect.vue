@@ -50,9 +50,18 @@ import {
 } from "use-dropdown";
 
 type Item = any;
+type DecoratedItem = {
+  item: Item;
+  ref: HTMLLIElement | null;
+};
 
 interface IProps {
   items: Array<Item>;
+}
+
+interface IState {
+  selected: Array<Item>;
+  decoratedItems: Array<DecoratedItem>;
 }
 
 export default {
@@ -65,7 +74,7 @@ export default {
   },
   setup(props: IProps) {
     const itemsRef = ref(null);
-    const state = reactive({
+    const state: IState = reactive({
       selected: [],
       decoratedItems: props.items.map((item: any) => ({
         ref: null,
@@ -75,7 +84,7 @@ export default {
 
     const listRef = ref(null);
 
-    function handleSelectOption(item: Item) {
+    function handleSelectOption(item: Item): void {
       if (state.selected.includes(item)) {
         state.selected = state.selected.filter(
           selectedItem => selectedItem !== item
@@ -126,6 +135,34 @@ export default {
       );
     }
 
+    function handleKeydownSelect(e: KeyboardEvent): void {
+      send({ type: KEY_DOWN_SELECT, e });
+    }
+
+    function handleClickSelect() {
+      send(CLICK_TRIGGER);
+    }
+
+    function handleClickItem({ item }: { item: Item }) {
+      send({ type: CLICK_ITEM, item });
+    }
+
+    function handleMousemoveItem(decoratedItem: any) {
+      send({ type: SET_ACTIVE_ITEM, decoratedItem });
+    }
+
+    function isOpen() {
+      return machineState.value.value === "open";
+    }
+
+    function getItemClasses(decoratedItem: any): string {
+      const { context } = machineState.value;
+      return classnames(itemStyles, {
+        "bg-gray-200": isItemActive(decoratedItem, context),
+        "bg-gray-400": isItemSelected(decoratedItem, state.selected)
+      });
+    }
+
     return {
       state,
       send,
@@ -133,7 +170,13 @@ export default {
       getListClasses,
       listRef,
       itemsRef,
-      handleRemoveSelectedItem
+      handleRemoveSelectedItem,
+      handleKeydownSelect,
+      handleClickSelect,
+      handleClickItem,
+      handleMousemoveItem,
+      isOpen,
+      getItemClasses
     };
   },
   data: function() {
@@ -141,35 +184,6 @@ export default {
       selectClasses: selectStyles,
       listClasses: `${listBoxContainerStyles} ${listBoxStyles}`
     };
-  },
-  methods: {
-    handleKeydownSelect: function(e: KeyboardEvent) {
-      this.send({ type: KEY_DOWN_SELECT, e });
-    },
-
-    handleClickSelect: function() {
-      this.send(CLICK_TRIGGER);
-    },
-
-    handleClickItem: function({ item }) {
-      this.send({ type: CLICK_ITEM, item });
-    },
-
-    handleMousemoveItem: function(decoratedItem) {
-      this.send({ type: `${SET_ACTIVE_ITEM}`, decoratedItem });
-    },
-
-    isOpen: function() {
-      return this.machineState.value === "open";
-    },
-
-    getItemClasses: function(decoratedItem) {
-      const { context } = this.machineState;
-      return classnames(itemStyles, {
-        "bg-gray-200": isItemActive(decoratedItem, context),
-        "bg-gray-400": isItemSelected(decoratedItem, this.state.selected)
-      });
-    }
   }
 };
 </script>

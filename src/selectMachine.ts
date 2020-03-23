@@ -31,15 +31,16 @@ export function isArray<T>(value: T | Array<T>): value is Array<T> {
 }
 
 type T = any;
+type ItemRef = HTMLLIElement | null;
 
 export interface IContext {
   listElement: HTMLElement | null;
   filterInputElement: HTMLInputElement;
   onChangeFilter(value: string): void;
   activeItemIndex: number;
-  decoratedItems: Array<DecoratedItem<HTMLLIElement, T>>;
-  filteredDecoratedItems: Array<DecoratedItem<HTMLLIElement, T>>;
-  activeDecoratedItem: DecoratedItem<HTMLLIElement, T>;
+  decoratedItems: Array<DecoratedItem<ItemRef, T>>;
+  filteredDecoratedItems: Array<DecoratedItem<ItemRef, T>>;
+  activeDecoratedItem: DecoratedItem<ItemRef, T>;
   filterString: string;
   itemMatchesFilter: any;
   onSelectOption(item: T, selected: T | Array<T>): void;
@@ -47,7 +48,7 @@ export interface IContext {
   autoTargetFirstItem: boolean;
   ephemeralString: string;
   defaultItemMatchesFilterString(
-    decoratedItem: DecoratedItem<HTMLLIElement, T>,
+    decoratedItem: DecoratedItem<ItemRef, T>,
     filterString: string
   ): void;
 }
@@ -73,11 +74,11 @@ type IEvent =
   | { type: "KEY_DOWN_SPACE"; e: any }
   | {
       type: "UPDATE_DECORATED_ITEMS";
-      decoratedItems: Array<DecoratedItem<HTMLLIElement, T>>;
+      decoratedItems: Array<DecoratedItem<ItemRef, T>>;
     }
   | { type: "UPDATE_FILTER"; filterString: string }
   | { type: "FILTER_ITEMS" }
-  | { type: "SET_ACTIVE_ITEM"; decoratedItem: DecoratedItem<HTMLLIElement, T> }
+  | { type: "SET_ACTIVE_ITEM"; decoratedItem: DecoratedItem<ItemRef, T> }
   | { type: "UPDATE_SELECTED"; selected: any }
   | { type: "CLEAR_EPHEMERAL_STRING" }
   | { type: "UPDATE_LIST_ELEMENT"; listElement: any };
@@ -220,7 +221,7 @@ const updateListElement = (_: IContext, { listElement }: any) => {
 };
 
 export const isItemActive = (
-  decoratedItem: DecoratedItem<HTMLLIElement, T>,
+  decoratedItem: DecoratedItem<ItemRef, T>,
   context: IContext
 ) => {
   const { activeItemIndex, filteredDecoratedItems } = context;
