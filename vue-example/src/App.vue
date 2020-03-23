@@ -1,16 +1,31 @@
 <template>
-  <div id="app">
-    <Select autoTargetFirstItem="false" v-bind:items="items" />
+  <div id="app" class="container mx-auto">
+    <h3>Basic Select</h3>
+    <div class="m-4">
+      <Select v-bind:items="items" />
+    </div>
+    <h3>Basic MultiSelect</h3>
+    <div class="m-4">
+      <MultiSelect v-bind:items="items" />
+    </div>
+    <h3>Filtering Select</h3>
+    <div class="m-4">
+      <FilterSelect autoTargetFirstItem="false" v-bind:items="items" />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import Select from "./components/Select.vue";
+import FilterSelect from "./components/FilterSelect.vue";
+import MultiSelect from "./components/MultiSelect.vue";
 
 export default {
   name: "App",
   components: {
-    Select
+    Select,
+    MultiSelect,
+    FilterSelect
   },
   data() {
     return {
@@ -65,5 +80,4 @@ export default {
 };
 </script>
 
-<style>
-</style>
+<style></style>

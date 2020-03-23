@@ -5,7 +5,14 @@
       @keydown="handleKeydownSelect"
       @click="handleClickSelect"
       tabindex="0"
-    >{{ !!state.selected ? state.selected.name : "" }}</div>
+    >
+      <SelectedItem
+        v-for="item in state.selected"
+        v-bind:key="item.id"
+        :item="item"
+        :onRemove="handleRemoveSelectedItem"
+      />
+    </div>
     <ul ref="listRef" :class="listClasses" v-show="isOpen()">
       <li
         v-for="decoratedItem in state.decoratedItems"
@@ -20,6 +27,7 @@
 </template>
 
 <script lang="ts">
+import SelectedItem from "./SelectedItem.vue";
 export const selectStyles =
   "w-64 h-10 border border-gray-500 flex rounded-sm outline-none items-center p-2 focus:border-blue-600 cursor-pointer";
 export const listBoxContainerStyles =
@@ -43,15 +51,22 @@ import {
 
 type Item = any;
 
+interface IProps {
+  items: Array<Item>;
+}
+
 export default {
-  name: "Select",
+  name: "MultiSelect",
   props: {
     items: Array
   },
-  setup(props: any) {
+  components: {
+    SelectedItem
+  },
+  setup(props: IProps) {
     const itemsRef = ref(null);
     const state = reactive({
-      selected: null,
+      selected: [],
       decoratedItems: props.items.map((item: any) => ({
         ref: null,
         item
@@ -61,7 +76,13 @@ export default {
     const listRef = ref(null);
 
     function handleSelectOption(item: Item) {
-      state.selected = item;
+      if (state.selected.includes(item)) {
+        state.selected = state.selected.filter(
+          selectedItem => selectedItem !== item
+        );
+      } else {
+        state.selected = [...state.selected, item];
+      }
     }
 
     const { state: machineState, send } = useMachine(selectMachine, {
@@ -99,13 +120,20 @@ export default {
       }
     });
 
+    function handleRemoveSelectedItem(item: Item) {
+      state.selected = state.selected.filter(
+        (selectedItem: Item) => selectedItem !== item
+      );
+    }
+
     return {
       state,
       send,
       machineState,
       getListClasses,
       listRef,
-      itemsRef
+      itemsRef,
+      handleRemoveSelectedItem
     };
   },
   data: function() {

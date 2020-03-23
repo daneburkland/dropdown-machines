@@ -5,7 +5,9 @@
       @keydown="handleKeydownSelect"
       @click="handleClickSelect"
       tabindex="0"
-    >{{ !!state.selected ? state.selected.name : "" }}</div>
+    >
+      {{ !!state.selected ? state.selected.name : "" }}
+    </div>
     <ul ref="listRef" :class="listClasses" v-show="isOpen()">
       <li
         v-for="decoratedItem in state.decoratedItems"
@@ -14,7 +16,9 @@
         :class="getItemClasses(decoratedItem)"
         @mousemove="() => handleMousemoveItem(decoratedItem)"
         @click="() => handleClickItem(decoratedItem)"
-      >{{ decoratedItem.item.name }}</li>
+      >
+        {{ decoratedItem.item.name }}
+      </li>
     </ul>
   </div>
 </template>

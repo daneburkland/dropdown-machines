@@ -164,8 +164,7 @@ const fuzzyFindActiveItemIndex = ({
   return decoratedItems.indexOf(firstMatch);
 };
 
-const getSelectKeyDownEvent = (_: IContext, { e }: any) => {
-  console.log(keycode(e.which));
+const getOpenSelectKeyDownEvent = (_: IContext, { e }: any) => {
   switch (keycode(e.which)) {
     case "up":
       return { type: KEY_DOWN_UP, e };
@@ -181,6 +180,16 @@ const getSelectKeyDownEvent = (_: IContext, { e }: any) => {
       return { type: KEY_DOWN_TAB, e };
     default:
       return { type: KEY_DOWN_OTHER, e };
+  }
+};
+
+const getClosedSelectKeyDownEvent = (_: IContext, { e }: any) => {
+  switch (keycode(e.which)) {
+    case "space":
+      return { type: KEY_DOWN_SPACE, e };
+    default:
+      // TODO: better way to bail?
+      return { type: "" };
   }
 };
 
@@ -239,7 +248,7 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
         ],
         on: {
           [KEY_DOWN_SELECT]: {
-            actions: [send(getSelectKeyDownEvent)]
+            actions: [send(getOpenSelectKeyDownEvent)]
           },
           [KEY_DOWN_FILTER]: {
             actions: [send(getFilterKeyDownEvent)]
@@ -330,6 +339,9 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
         on: {
           [CLICK_TRIGGER]: {
             target: "open"
+          },
+          [KEY_DOWN_SELECT]: {
+            actions: [send(getClosedSelectKeyDownEvent)]
           },
           [KEY_DOWN_SPACE]: {
             target: "open"
