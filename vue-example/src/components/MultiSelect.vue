@@ -35,7 +35,12 @@ export const listBoxContainerStyles =
 export const listBoxStyles = "w-64 h-48 overflow-y-auto cursor-pointer";
 export const itemStyles = "px-2 py-1";
 import { useMachine } from "@xstate/vue";
-import { reactive, ref, onUpdated } from "@vue/composition-api";
+import {
+  reactive,
+  ref,
+  onMounted,
+  defineComponent
+} from "@vue/composition-api";
 import classnames from "classnames";
 import {
   selectMachine,
@@ -64,19 +69,20 @@ interface IState {
   decoratedItems: Array<DecoratedItem>;
 }
 
-export default {
+const MultiSelect = defineComponent({
   name: "MultiSelect",
-  props: {
-    items: Array
-  },
   components: {
     SelectedItem
   },
-  setup(props: IProps) {
+  props: {
+    // TODO: Typescript is being weird here
+    items: Array
+  },
+  setup({ items }: IProps) {
     const itemsRef = ref(null);
     const state: IState = reactive({
       selected: [],
-      decoratedItems: props.items.map((item: any) => ({
+      decoratedItems: items.map((item: any) => ({
         ref: null,
         item
       }))
@@ -108,25 +114,22 @@ export default {
       return `${listBoxContainerStyles} ${listBoxStyles}`;
     }
 
-    onUpdated(() => {
-      if (machineState.value.context.listElement !== listRef.value) {
-        send({
-          type: UPDATE_LIST_ELEMENT,
-          listElement: listRef.value
-        });
-      }
+    onMounted(() => {
+      send({
+        type: UPDATE_LIST_ELEMENT,
+        listElement: listRef.value
+      });
 
       const refs = itemsRef?.value || [];
       const decoratedItemsWithRefs = state.decoratedItems.map(
-        (item: any, index: number) => ({ ...item, ref: refs && refs[index] })
+        (item: Item, index: number) => ({ ...item, ref: refs && refs[index] })
       );
-      if (!machineState.value.context.decoratedItems[0].ref) {
-        state.decoratedItems = decoratedItemsWithRefs;
-        send({
-          type: UPDATE_DECORATED_ITEMS,
-          decoratedItems: decoratedItemsWithRefs
-        });
-      }
+
+      state.decoratedItems = decoratedItemsWithRefs;
+      send({
+        type: UPDATE_DECORATED_ITEMS,
+        decoratedItems: decoratedItemsWithRefs
+      });
     });
 
     function handleRemoveSelectedItem(item: Item) {
@@ -155,7 +158,7 @@ export default {
       return machineState.value.value === "open";
     }
 
-    function getItemClasses(decoratedItem: any): string {
+    function getItemClasses(decoratedItem: DecoratedItem): string {
       const { context } = machineState.value;
       return classnames(itemStyles, {
         "bg-gray-200": isItemActive(decoratedItem, context),
@@ -185,5 +188,7 @@ export default {
       listClasses: `${listBoxContainerStyles} ${listBoxStyles}`
     };
   }
-};
+});
+
+export default MultiSelect;
 </script>

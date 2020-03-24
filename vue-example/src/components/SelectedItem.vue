@@ -12,6 +12,8 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from "@vue/composition-api";
+
 export const pillClasses =
   "flex items-center mr-2 border border-gray-500 rounded-md px-1";
 export const pillCloseStyles =
@@ -24,13 +26,16 @@ interface IProps {
   onRemove(item: Item): void;
 }
 
-export default {
+const SelectedItem = defineComponent({
   name: "SelectedItem",
-  props: ["item", "onRemove"],
-  setup(props: IProps) {
+  props: {
+    item: Object,
+    onRemove: Function
+  },
+  setup({ item, onRemove }: IProps) {
     function handleClickClose(event: MouseEvent) {
       event.stopPropagation();
-      props.onRemove(props.item);
+      onRemove(item);
     }
     return {
       handleClickClose
@@ -42,5 +47,7 @@ export default {
       pillCloseStyles
     };
   }
-};
+});
+
+export default SelectedItem;
 </script>

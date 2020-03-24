@@ -27,7 +27,12 @@ export const listBoxContainerStyles =
 export const listBoxStyles = "w-64 h-48 overflow-y-auto cursor-pointer";
 export const itemStyles = "px-2 py-1";
 import { useMachine } from "@xstate/vue";
-import { reactive, ref, onUpdated } from "@vue/composition-api";
+import {
+  reactive,
+  ref,
+  onMounted,
+  defineComponent
+} from "@vue/composition-api";
 import classnames from "classnames";
 import {
   selectMachine,
@@ -42,17 +47,30 @@ import {
 } from "use-dropdown";
 
 type Item = any;
+type DecoratedItem = {
+  item: Item;
+  ref: HTMLLIElement | null;
+};
 
-export default {
+interface IProps {
+  items: Array<Item>;
+}
+
+interface IState {
+  selected: Item | null;
+  decoratedItems: Array<DecoratedItem>;
+}
+
+const Select = defineComponent({
   name: "Select",
   props: {
     items: Array
   },
-  setup(props: any) {
+  setup(props: IProps) {
     const itemsRef = ref(null);
-    const state = reactive({
+    const state: IState = reactive({
       selected: null,
-      decoratedItems: props.items.map((item: any) => ({
+      decoratedItems: props.items.map((item: Item) => ({
         ref: null,
         item
       }))
@@ -66,7 +84,7 @@ export default {
 
     const { state: machineState, send } = useMachine(selectMachine, {
       context: {
-        listElement: listRef.value as any,
+        listElement: listRef.value,
         decoratedItems: state.decoratedItems,
         filteredDecoratedItems: state.decoratedItems,
         onSelectOption: handleSelectOption,
@@ -78,26 +96,51 @@ export default {
       return `${listBoxContainerStyles} ${listBoxStyles}`;
     }
 
-    onUpdated(() => {
-      if (machineState.value.context.listElement !== listRef.value) {
-        send({
-          type: UPDATE_LIST_ELEMENT,
-          listElement: listRef.value
-        });
-      }
+    onMounted(() => {
+      send({
+        type: UPDATE_LIST_ELEMENT,
+        listElement: listRef.value
+      });
 
       const refs = itemsRef?.value || [];
       const decoratedItemsWithRefs = state.decoratedItems.map(
-        (item: any, index: number) => ({ ...item, ref: refs && refs[index] })
+        (item: Item, index: number) => ({ ...item, ref: refs && refs[index] })
       );
-      if (!machineState.value.context.decoratedItems[0].ref) {
-        state.decoratedItems = decoratedItemsWithRefs;
-        send({
-          type: UPDATE_DECORATED_ITEMS,
-          decoratedItems: decoratedItemsWithRefs
-        });
-      }
+
+      state.decoratedItems = decoratedItemsWithRefs;
+      send({
+        type: UPDATE_DECORATED_ITEMS,
+        decoratedItems: decoratedItemsWithRefs
+      });
     });
+
+    function handleKeydownSelect(e: KeyboardEvent) {
+      send({ type: KEY_DOWN_SELECT, e });
+    }
+
+    function handleClickSelect() {
+      send(CLICK_TRIGGER);
+    }
+
+    function handleClickItem({ item }: { item: Item }) {
+      send({ type: CLICK_ITEM, item });
+    }
+
+    function handleMousemoveItem(decoratedItem: DecoratedItem) {
+      send({ type: SET_ACTIVE_ITEM, decoratedItem });
+    }
+
+    function isOpen() {
+      return machineState.value.value === "open";
+    }
+
+    function getItemClasses(decoratedItem: DecoratedItem) {
+      const { context } = machineState.value;
+      return classnames(itemStyles, {
+        "bg-gray-200": isItemActive(decoratedItem, context),
+        "bg-gray-400": isItemSelected(decoratedItem, state.selected)
+      });
+    }
 
     return {
       state,
@@ -105,7 +148,13 @@ export default {
       machineState,
       getListClasses,
       listRef,
-      itemsRef
+      itemsRef,
+      handleKeydownSelect,
+      handleClickSelect,
+      handleClickItem,
+      handleMousemoveItem,
+      isOpen,
+      getItemClasses
     };
   },
   data: function() {
@@ -113,35 +162,8 @@ export default {
       selectClasses: selectStyles,
       listClasses: `${listBoxContainerStyles} ${listBoxStyles}`
     };
-  },
-  methods: {
-    handleKeydownSelect: function(e: KeyboardEvent) {
-      this.send({ type: KEY_DOWN_SELECT, e });
-    },
-
-    handleClickSelect: function() {
-      this.send(CLICK_TRIGGER);
-    },
-
-    handleClickItem: function({ item }) {
-      this.send({ type: CLICK_ITEM, item });
-    },
-
-    handleMousemoveItem: function(decoratedItem) {
-      this.send({ type: `${SET_ACTIVE_ITEM}`, decoratedItem });
-    },
-
-    isOpen: function() {
-      return this.machineState.value === "open";
-    },
-
-    getItemClasses: function(decoratedItem) {
-      const { context } = this.machineState;
-      return classnames(itemStyles, {
-        "bg-gray-200": isItemActive(decoratedItem, context),
-        "bg-gray-400": isItemSelected(decoratedItem, this.state.selected)
-      });
-    }
   }
-};
+});
+
+export default Select;
 </script>

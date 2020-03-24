@@ -8,6 +8,7 @@ import selectMachine, {
   KEY_DOWN_FILTER,
   UPDATE_DECORATED_ITEMS,
   UPDATE_LIST_ELEMENT,
+  UPDATE_FILTER_INPUT_ELEMENT,
   isItemActive,
   isItemSelected
 } from "./selectMachine";
@@ -23,6 +24,7 @@ export {
   KEY_DOWN_FILTER,
   UPDATE_DECORATED_ITEMS,
   UPDATE_LIST_ELEMENT,
+  UPDATE_FILTER_INPUT_ELEMENT,
   isItemActive,
   isItemSelected
 };

@@ -55,7 +55,7 @@ function useSelect({
     return decoratedItem.ref.current?.innerHTML.toLowerCase();
   }, []);
 
-  const defaultItemMatchesFilterString = useCallback(
+  const itemMatchesInnerHTML = useCallback(
     (
       decoratedItem: DecoratedItem<HTMLLIElement, Item>,
       filterString: string
@@ -80,7 +80,7 @@ function useSelect({
       // TODO: how to default this
       filteredDecoratedItems: decoratedItems,
       itemMatchesFilter,
-      defaultItemMatchesFilterString,
+      itemMatchesInnerHTML,
       onSelectOption,
       selected,
       autoTargetFirstItem

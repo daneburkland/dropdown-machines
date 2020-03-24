@@ -47,7 +47,7 @@ function useList<T>({
     return decoratedItem.ref.current?.innerHTML.toLowerCase();
   }, []);
 
-  const defaultItemMatchesFilterString = useCallback(
+  const itemMatchesInnerHTML = useCallback(
     (decoratedItem: DecoratedItem<HTMLLIElement, T>, filterString: string) => {
       if (!decoratedItem.ref.current) return false;
       return (
@@ -207,7 +207,7 @@ function useList<T>({
     listRef,
     decrementActiveItem,
     incrementActiveItem,
-    defaultItemMatchesFilterString,
+    itemMatchesInnerHTML,
     defaultItemDisplayValue,
     activeDecoratedItem,
     scrollDecoratedItemIntoView

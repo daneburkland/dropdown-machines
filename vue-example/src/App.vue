@@ -1,16 +1,22 @@
 <template>
   <div id="app" class="container mx-auto">
-    <h3>Basic Select</h3>
-    <div class="m-4">
-      <Select v-bind:items="items" />
+    <div class="my-4">
+      <label>Basic Select</label>
+      <div>
+        <Select v-bind:items="items" />
+      </div>
     </div>
-    <h3>Basic MultiSelect</h3>
-    <div class="m-4">
-      <MultiSelect v-bind:items="items" />
+    <div class="my-4">
+      <label>Basic MultiSelect</label>
+      <div>
+        <MultiSelect v-bind:items="items" />
+      </div>
     </div>
-    <h3>Filtering Select</h3>
-    <div class="m-4">
-      <FilterSelect autoTargetFirstItem="false" v-bind:items="items" />
+    <div class="my-4">
+      <label>Filtering Select</label>
+      <div>
+        <FilterSelect autoTargetFirstItem="false" v-bind:items="items" />
+      </div>
     </div>
   </div>
 </template>

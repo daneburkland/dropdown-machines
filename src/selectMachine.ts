@@ -1,12 +1,6 @@
 import { Machine, assign, actions } from "xstate";
 import keycode from "keycode";
 const { send, cancel } = actions;
-
-export type DecoratedItem<RefI, I> = {
-  ref: RefI;
-  item: I;
-};
-
 export const KEY_DOWN_FILTER = "KEY_DOWN_FILTER";
 export const KEY_DOWN_SELECT = "KEY_DOWN_SELECT";
 export const KEY_DOWN_UP = "KEY_DOWN_UP";
@@ -25,32 +19,32 @@ export const UPDATE_SELECTED = "UPDATE_SELECTED";
 export const CLEAR_EPHEMERAL_STRING = "CLEAR_EPHEMERAL_STRING";
 export const UPDATE_DECORATED_ITEMS = "UPDATE_DECORATED_ITEMS";
 export const UPDATE_LIST_ELEMENT = "UPDATE_LIST_ELEMENT";
+export const UPDATE_FILTER_INPUT_ELEMENT = "UPDATE_FILTER_INPUT_ELEMENT";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
 }
 
-type T = any;
-type ItemRef = HTMLLIElement | null;
+type T = HTMLLIElement | null;
+type DecoratedItem = {
+  item: T;
+  ref: HTMLLIElement | null;
+};
 
 export interface IContext {
   listElement: HTMLElement | null;
-  filterInputElement: HTMLInputElement;
+  filterInputElement: HTMLInputElement | null;
   onChangeFilter(value: string): void;
   activeItemIndex: number;
-  decoratedItems: Array<DecoratedItem<ItemRef, T>>;
-  filteredDecoratedItems: Array<DecoratedItem<ItemRef, T>>;
-  activeDecoratedItem: DecoratedItem<ItemRef, T>;
+  decoratedItems: Array<DecoratedItem>;
+  filteredDecoratedItems: Array<DecoratedItem>;
+  activeDecoratedItem: DecoratedItem;
   filterString: string;
   itemMatchesFilter: any;
   onSelectOption(item: T, selected: T | Array<T>): void;
   selected: Array<T> | T;
   autoTargetFirstItem: boolean;
   ephemeralString: string;
-  defaultItemMatchesFilterString(
-    decoratedItem: DecoratedItem<ItemRef, T>,
-    filterString: string
-  ): void;
 }
 
 interface ISchema {
@@ -74,14 +68,34 @@ type IEvent =
   | { type: "KEY_DOWN_SPACE"; e: any }
   | {
       type: "UPDATE_DECORATED_ITEMS";
-      decoratedItems: Array<DecoratedItem<ItemRef, T>>;
+      decoratedItems: Array<DecoratedItem>;
     }
   | { type: "UPDATE_FILTER"; filterString: string }
   | { type: "FILTER_ITEMS" }
-  | { type: "SET_ACTIVE_ITEM"; decoratedItem: DecoratedItem<ItemRef, T> }
+  | { type: "SET_ACTIVE_ITEM"; decoratedItem: DecoratedItem }
   | { type: "UPDATE_SELECTED"; selected: any }
   | { type: "CLEAR_EPHEMERAL_STRING" }
-  | { type: "UPDATE_LIST_ELEMENT"; listElement: any };
+  | {
+      type: "UPDATE_LIST_ELEMENT";
+      listElement: HTMLUListElement | null;
+    }
+  | {
+      type: "UPDATE_FILTER_INPUT_ELEMENT";
+      filterInputElement: HTMLInputElement | null;
+    };
+
+const itemInnerHTML = (decoratedItem: DecoratedItem) => {
+  return decoratedItem.ref?.innerHTML.toLowerCase();
+};
+
+const itemMatchesInnerHTML = (
+  decoratedItem: DecoratedItem,
+  filterString: string
+) => {
+  const innerHTML = itemInnerHTML(decoratedItem);
+  if (!decoratedItem.ref || !innerHTML) return false;
+  return innerHTML.indexOf(filterString.toLocaleLowerCase()) > -1;
+};
 
 const getActiveDecoratedItem = ({
   decoratedItems,
@@ -151,14 +165,13 @@ const fuzzyFindActiveItemIndex = ({
   decoratedItems,
   ephemeralString,
   itemMatchesFilter,
-  defaultItemMatchesFilterString,
   activeItemIndex
 }: IContext) => {
   const firstMatch = decoratedItems.find(decoratedItem => {
     if (itemMatchesFilter) {
       return itemMatchesFilter(decoratedItem.item, ephemeralString);
     } else {
-      return defaultItemMatchesFilterString(decoratedItem, ephemeralString);
+      return itemMatchesInnerHTML(decoratedItem, ephemeralString);
     }
   });
   if (!firstMatch) return activeItemIndex;
@@ -220,8 +233,12 @@ const updateListElement = (_: IContext, { listElement }: any) => {
   return listElement;
 };
 
+const updateFilterInputElement = (_: IContext, { filterInputElement }: any) => {
+  return filterInputElement;
+};
+
 export const isItemActive = (
-  decoratedItem: DecoratedItem<ItemRef, T>,
+  decoratedItem: DecoratedItem,
   context: IContext
 ) => {
   const { activeItemIndex, filteredDecoratedItems } = context;
@@ -242,7 +259,14 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
     initial: "closed",
     states: {
       open: {
-        exit: ["clearFilterString", "clearActiveItem"],
+        exit: [
+          "clearFilterString",
+          "clearActiveItem",
+          assign<IContext>({
+            filteredDecoratedItems: ({ decoratedItems }: IContext) =>
+              decoratedItems
+          })
+        ],
         entry: [
           "focus",
           assign<IContext>({ activeItemIndex: updateActiveItemIndex })
@@ -265,7 +289,8 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
               send(CLEAR_EPHEMERAL_STRING, {
                 delay: 350,
                 id: "ephemeralStringTimeout"
-              })
+              }),
+              "adjustScroll"
             ]
           },
           [KEY_DOWN_UP]: {
@@ -319,20 +344,6 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
                 }
               })
             ]
-          },
-          [UPDATE_DECORATED_ITEMS]: {
-            actions: [
-              assign<IContext>({
-                decoratedItems: updateDecoratedItems
-              })
-            ]
-          },
-          [UPDATE_LIST_ELEMENT]: {
-            actions: [
-              assign<IContext>({
-                listElement: updateListElement
-              })
-            ]
           }
         }
       },
@@ -353,6 +364,27 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
                 selected: (_, { selected }) => selected
               })
             ]
+          },
+          [UPDATE_LIST_ELEMENT]: {
+            actions: [
+              assign<IContext>({
+                listElement: updateListElement
+              })
+            ]
+          },
+          [UPDATE_FILTER_INPUT_ELEMENT]: {
+            actions: [
+              assign<IContext>({
+                filterInputElement: updateFilterInputElement
+              })
+            ]
+          },
+          [UPDATE_DECORATED_ITEMS]: {
+            actions: [
+              assign<IContext>({
+                decoratedItems: updateDecoratedItems
+              })
+            ]
           }
         }
       }
@@ -365,15 +397,16 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
       }
     },
     actions: {
-      focus: ({ listElement, filterInputElement }: IContext) => {
+      focus: (context: IContext) => {
         // Move this to the bottom of the stack to allow DOM to transition
+        const { filterInputElement, listElement } = context;
         setTimeout(() => {
           if (filterInputElement) {
             filterInputElement.focus();
           } else {
             listElement && listElement.focus();
           }
-        }, 0);
+        }, 100);
       },
       clearFilterString: ({ onChangeFilter, filterInputElement }: IContext) => {
         assign({
@@ -389,6 +422,7 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
         const activeDecoratedItem = getActiveDecoratedItem(context);
         const { listElement } = context;
         const activeItemElement = activeDecoratedItem.ref;
+        console.log(listElement, activeItemElement);
 
         if (!activeItemElement || !listElement) return;
 
@@ -423,10 +457,10 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
       handleKeyboardSelectItem: ({
         activeItemIndex,
         onSelectOption,
-        decoratedItems,
+        filteredDecoratedItems,
         selected
       }: IContext) => {
-        onSelectOption(decoratedItems[activeItemIndex].item, selected);
+        onSelectOption(filteredDecoratedItems[activeItemIndex].item, selected);
       },
 
       handleClickItem: (
