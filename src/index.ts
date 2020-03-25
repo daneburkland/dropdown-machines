@@ -13,18 +13,7 @@ import selectMachine, {
   isItemSelected
 } from "./selectMachine";
 
-export {
-  selectMachine,
-  CLICK_TRIGGER,
-  CLICK_ITEM,
-  UPDATE_FILTER,
-  SET_ACTIVE_ITEM,
-  UPDATE_SELECTED,
-  KEY_DOWN_SELECT,
-  KEY_DOWN_FILTER,
-  UPDATE_DECORATED_ITEMS,
-  UPDATE_LIST_ELEMENT,
-  UPDATE_FILTER_INPUT_ELEMENT,
-  isItemActive,
-  isItemSelected
-};
+import { DecoratedItem } from "./types";
+
+export { selectMachine, CLICK_TRIGGER, CLICK_ITEM, UPDATE_FILTER, SET_ACTIVE_ITEM, UPDATE_SELECTED, KEY_DOWN_SELECT, KEY_DOWN_FILTER, UPDATE_DECORATED_ITEMS, UPDATE_LIST_ELEMENT, UPDATE_FILTER_INPUT_ELEMENT, isItemActive, isItemSelected };  export type { DecoratedItem };
+

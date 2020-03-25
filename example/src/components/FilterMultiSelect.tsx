@@ -1,6 +1,7 @@
 import React, { useState, MouseEvent } from "react";
 import classnames from "classnames";
-import { useSelect } from "use-dropdown";
+import useSelect from "../hooks/useSelect";
+import { DecoratedItem } from "use-dropdown";
 import { itemMatchesFilter } from "../utils";
 import {
   multiSelectStyles,
@@ -63,7 +64,8 @@ function FilterMultiSelect({ items, autoTargetFirstItem }: IMultiSelectProps) {
     getFilterInputProps,
     getSelectProps,
     isItemActive,
-    isItemSelected
+    isItemSelected,
+    state
   } = useSelect({
     onSelectOption: handleSelectOption,
     itemMatchesFilter,
@@ -100,13 +102,13 @@ function FilterMultiSelect({ items, autoTargetFirstItem }: IMultiSelectProps) {
             {...getListProps()}
             className={classnames(listBoxStyles, "relative")}
           >
-            {decoratedItems.map((decorated: any, index) => (
+            {decoratedItems.map((decorated: DecoratedItem, index: number) => (
               <li
                 {...getItemProps(decorated)}
                 key={decorated.id || index}
                 className={classnames(itemStyles, {
-                  "bg-gray-200": isItemActive(decorated),
-                  "bg-gray-400": isItemSelected(decorated)
+                  "bg-gray-200": isItemActive(decorated, state.context),
+                  "bg-gray-400": isItemSelected(decorated, selected)
                 })}
               >
                 {decorated.item.name}

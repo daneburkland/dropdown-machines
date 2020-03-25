@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import classnames from "classnames";
-import { useSelect } from "use-dropdown";
+import useSelect from "../hooks/useSelect";
+import { DecoratedItem } from "use-dropdown";
 import { itemMatchesFilter } from "../utils";
 import {
   selectStyles,
@@ -11,6 +12,7 @@ import {
 
 type Item = {
   name: string;
+  id: String;
 };
 
 interface IFilterableSelectProps {
@@ -32,7 +34,8 @@ function FilteringSelect({
     getFilterInputProps,
     getSelectProps,
     isItemActive,
-    isItemSelected
+    isItemSelected,
+    state
   } = useSelect({
     onSelectOption: setSelected,
     items,
@@ -62,13 +65,13 @@ function FilteringSelect({
           {...getListProps()}
           className={classnames(listBoxStyles, "relative")}
         >
-          {decoratedItems.map((item: any, index) => (
+          {decoratedItems.map((item: DecoratedItem<Item>, index: number) => (
             <li
               {...getItemProps(item)}
               key={item.id || index}
               className={classnames(itemStyles, {
-                "bg-gray-200": isItemActive(item),
-                "bg-gray-400": isItemSelected(item)
+                "bg-gray-200": isItemActive(item, state.context),
+                "bg-gray-400": isItemSelected(item, selected)
               })}
             >
               {item.item.name}

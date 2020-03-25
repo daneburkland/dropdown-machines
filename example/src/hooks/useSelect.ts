@@ -7,7 +7,8 @@ import {
   ChangeEvent
 } from "react";
 import { useMachine } from "@xstate/react";
-import selectMachine, {
+import {
+  selectMachine,
   CLICK_TRIGGER,
   CLICK_ITEM,
   UPDATE_FILTER,
@@ -16,9 +17,11 @@ import selectMachine, {
   KEY_DOWN_SELECT,
   KEY_DOWN_FILTER,
   isItemActive,
-  isItemSelected
-} from "../../../src/selectMachine";
-import { DecoratedItem } from "../../../src/index";
+  isItemSelected,
+  DecoratedItem,
+  UPDATE_FILTER_INPUT_ELEMENT,
+  UPDATE_LIST_ELEMENT
+} from "use-dropdown";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
@@ -67,7 +70,7 @@ function useSelect({
         ) > -1
       );
     },
-    []
+    [defaultItemDisplayValue]
   );
 
   const [state, send] = useMachine(selectMachine, {
@@ -87,17 +90,31 @@ function useSelect({
     }
   });
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
     send({
-      type: UPDATE_FILTER,
-      filterString: e.target.value
+      type: UPDATE_FILTER_INPUT_ELEMENT,
+      filterInputElement: filterInputRef.current
     });
-    e.preventDefault();
-  };
+    send({
+      type: UPDATE_LIST_ELEMENT,
+      listElement: listRef.current
+    });
+  }, []);
+
+  const handleInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      send({
+        type: UPDATE_FILTER,
+        filterString: e.target.value
+      });
+      e.preventDefault();
+    },
+    [send]
+  );
 
   useEffect(() => {
     send(UPDATE_SELECTED, { selected });
-  }, [selected]);
+  }, [selected, send]);
 
   const getItemProps = (decoratedItem: DecoratedItem<HTMLLIElement, Item>) => {
     const { ref } = decoratedItem;
@@ -129,7 +146,7 @@ function useSelect({
       "data-testid": "filterInput",
       ref: filterInputRef
     }),
-    [handleInputChange]
+    [handleInputChange, send]
   );
 
   const getSelectProps = useCallback(() => {
@@ -141,7 +158,7 @@ function useSelect({
       "data-testid": "select",
       onClick: () => send(CLICK_TRIGGER)
     };
-  }, []);
+  }, [send]);
 
   const isOpen = useMemo(() => state.value === "open", [state.value]);
 

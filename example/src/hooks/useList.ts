@@ -8,7 +8,7 @@ import {
   SetStateAction
 } from "react";
 
-import { DecoratedItem } from "./index";
+import { DecoratedItem } from "use-dropdown";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);

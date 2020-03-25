@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import classnames from "classnames";
-import { useSelect } from "use-dropdown";
+import useSelect from "../hooks/useSelect";
+import { DecoratedItem } from "use-dropdown";
 
 type Item = {
   name: string;
@@ -32,7 +33,8 @@ function Select({ items, autoTargetFirstItem }: IFilterableSelectProps) {
     getListProps,
     getSelectProps,
     isItemActive,
-    isItemSelected
+    isItemSelected,
+    state
   } = useSelect({
     onSelectOption: setSelected,
     items,
@@ -56,13 +58,13 @@ function Select({ items, autoTargetFirstItem }: IFilterableSelectProps) {
           hidden: !isOpen
         })}
       >
-        {decoratedItems.map(decoratedItem => (
+        {decoratedItems.map((decoratedItem: DecoratedItem<Item>) => (
           <li
             {...getItemProps(decoratedItem)}
             key={decoratedItem.item?.id}
             className={classnames(itemStyles, {
-              "bg-gray-200": isItemActive(decoratedItem),
-              "bg-gray-400": isItemSelected(decoratedItem)
+              "bg-gray-200": isItemActive(decoratedItem, state.context),
+              "bg-gray-400": isItemSelected(decoratedItem, selected)
             })}
           >
             {decoratedItem.item?.name}

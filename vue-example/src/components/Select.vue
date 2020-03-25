@@ -102,6 +102,8 @@ const Select = defineComponent({
         listElement: listRef.value
       });
 
+      console.log(listRef.value);
+
       const refs = itemsRef?.value || [];
       const decoratedItemsWithRefs = state.decoratedItems.map(
         (item: Item, index: number) => ({ ...item, ref: refs && refs[index] })

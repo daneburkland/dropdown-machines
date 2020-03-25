@@ -1,7 +1,8 @@
 import React, { useState, MouseEvent } from "react";
 import classnames from "classnames";
-import { useSelect } from "use-dropdown";
+import useSelect from "../hooks/useSelect";
 import { itemStyles, listBoxStyles, listBoxContainerStyles } from "./Select";
+import { DecoratedItem } from "use-dropdown";
 
 export const closeIcon = (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -69,7 +70,8 @@ function MultiSelect({ items, autoTargetFirstItem }: IMultiSelectProps) {
     getListProps,
     getSelectProps,
     isItemActive,
-    isItemSelected
+    isItemSelected,
+    state
   } = useSelect({
     onSelectOption: handleSelectOption,
     items,
@@ -97,13 +99,13 @@ function MultiSelect({ items, autoTargetFirstItem }: IMultiSelectProps) {
           hidden: !isOpen
         })}
       >
-        {decoratedItems.map((item: any, index) => (
+        {decoratedItems.map((item: DecoratedItem<Item>, index: number) => (
           <li
             {...getItemProps(item)}
             key={item.id || index}
             className={classnames(itemStyles, {
-              "bg-gray-200": isItemActive(item),
-              "bg-gray-400": isItemSelected(item)
+              "bg-gray-200": isItemActive(item, state.context),
+              "bg-gray-400": isItemSelected(item, selected)
             })}
           >
             {item.item.name}

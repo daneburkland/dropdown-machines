@@ -1,6 +1,7 @@
 import { Machine, assign, actions } from "xstate";
 import keycode from "keycode";
 const { send, cancel } = actions;
+import { DecoratedItem } from "./types";
 export const KEY_DOWN_FILTER = "KEY_DOWN_FILTER";
 export const KEY_DOWN_SELECT = "KEY_DOWN_SELECT";
 export const KEY_DOWN_UP = "KEY_DOWN_UP";
@@ -25,24 +26,24 @@ export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
 }
 
-type T = HTMLLIElement | null;
-type DecoratedItem = {
-  item: T;
-  ref: HTMLLIElement | null;
-};
+type Item = Object;
 
 export interface IContext {
   listElement: HTMLElement | null;
   filterInputElement: HTMLInputElement | null;
   onChangeFilter(value: string): void;
   activeItemIndex: number;
-  decoratedItems: Array<DecoratedItem>;
-  filteredDecoratedItems: Array<DecoratedItem>;
-  activeDecoratedItem: DecoratedItem;
+  decoratedItems: Array<DecoratedItem<Item>>;
+  filteredDecoratedItems: Array<DecoratedItem<Item>>;
+  activeDecoratedItem: DecoratedItem<Item>;
   filterString: string;
   itemMatchesFilter: any;
-  onSelectOption(item: T, selected: T | Array<T>): void;
-  selected: Array<T> | T;
+  itemMatchesInnerHTML(
+    decoratedItem: DecoratedItem<Item>,
+    filterString: string
+  ): boolean;
+  onSelectOption(item: Item, selected: Item | Array<Item>): void;
+  selected: Array<Item> | Item;
   autoTargetFirstItem: boolean;
   ephemeralString: string;
 }
@@ -68,11 +69,11 @@ type IEvent =
   | { type: "KEY_DOWN_SPACE"; e: any }
   | {
       type: "UPDATE_DECORATED_ITEMS";
-      decoratedItems: Array<DecoratedItem>;
+      decoratedItems: Array<DecoratedItem<Item>>;
     }
   | { type: "UPDATE_FILTER"; filterString: string }
   | { type: "FILTER_ITEMS" }
-  | { type: "SET_ACTIVE_ITEM"; decoratedItem: DecoratedItem }
+  | { type: "SET_ACTIVE_ITEM"; decoratedItem: DecoratedItem<Item> }
   | { type: "UPDATE_SELECTED"; selected: any }
   | { type: "CLEAR_EPHEMERAL_STRING" }
   | {
@@ -84,12 +85,12 @@ type IEvent =
       filterInputElement: HTMLInputElement | null;
     };
 
-const itemInnerHTML = (decoratedItem: DecoratedItem) => {
+const itemInnerHTML = (decoratedItem: DecoratedItem<Item>) => {
   return decoratedItem.ref?.innerHTML.toLowerCase();
 };
 
 const itemMatchesInnerHTML = (
-  decoratedItem: DecoratedItem,
+  decoratedItem: DecoratedItem<Item>,
   filterString: string
 ) => {
   const innerHTML = itemInnerHTML(decoratedItem);
@@ -238,14 +239,17 @@ const updateFilterInputElement = (_: IContext, { filterInputElement }: any) => {
 };
 
 export const isItemActive = (
-  decoratedItem: DecoratedItem,
+  decoratedItem: DecoratedItem<Item>,
   context: IContext
 ) => {
   const { activeItemIndex, filteredDecoratedItems } = context;
   return decoratedItem.item === filteredDecoratedItems[activeItemIndex]?.item;
 };
 
-export const isItemSelected = ({ item }: { item: T }, selected: Array<T>) => {
+export const isItemSelected = (
+  { item }: DecoratedItem<Item>,
+  selected: Item | Array<Item> | null
+) => {
   if (isArray(selected)) {
     return selected.includes(item);
   } else {
@@ -422,7 +426,6 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
         const activeDecoratedItem = getActiveDecoratedItem(context);
         const { listElement } = context;
         const activeItemElement = activeDecoratedItem.ref;
-        console.log(listElement, activeItemElement);
 
         if (!activeItemElement || !listElement) return;
 
