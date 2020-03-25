@@ -48,8 +48,8 @@ import {
   SET_ACTIVE_ITEM,
   KEY_DOWN_SELECT,
   UPDATE_DECORATED_ITEMS,
-  UPDATE_LIST_ELEMENT,
-  UPDATE_FILTER_INPUT_ELEMENT,
+  UPDATE_LIST_REF,
+  UPDATE_FILTER_INPUT_REF,
   UPDATE_FILTER,
   KEY_DOWN_FILTER,
   isItemActive,
@@ -95,8 +95,9 @@ const FilterSelect = defineComponent({
 
     const { state: machineState, send } = useMachine(selectMachine, {
       context: {
-        listElement: listRef.value,
-        filterInputElement: filterInputRef.value,
+        listRef,
+        filterInputRef,
+        getElementFromRef: ref => ref,
         decoratedItems: state.decoratedItems,
         filteredDecoratedItems: state.decoratedItems,
         onSelectOption: handleSelectOption,
@@ -111,16 +112,16 @@ const FilterSelect = defineComponent({
 
     onMounted(() => {
       send({
-        type: UPDATE_LIST_ELEMENT,
-        listElement: listRef.value
+        type: UPDATE_LIST_REF,
+        listRef
       });
 
       send({
-        type: UPDATE_FILTER_INPUT_ELEMENT,
-        filterInputElement: filterInputRef.value
+        type: UPDATE_FILTER_INPUT_REF,
+        filterInputRef
       });
 
-      const refs = itemsRef?.value || [];
+      const refs = itemsRef.value || [];
       const decoratedItemsWithRefs = state.decoratedItems.map(
         (item: Item, index: number) => ({ ...item, ref: refs && refs[index] })
       );

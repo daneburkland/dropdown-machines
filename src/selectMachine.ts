@@ -19,33 +19,37 @@ export const SET_ACTIVE_ITEM = "SET_ACTIVE_ITEM";
 export const UPDATE_SELECTED = "UPDATE_SELECTED";
 export const CLEAR_EPHEMERAL_STRING = "CLEAR_EPHEMERAL_STRING";
 export const UPDATE_DECORATED_ITEMS = "UPDATE_DECORATED_ITEMS";
-export const UPDATE_LIST_ELEMENT = "UPDATE_LIST_ELEMENT";
-export const UPDATE_FILTER_INPUT_ELEMENT = "UPDATE_FILTER_INPUT_ELEMENT";
+export const UPDATE_LIST_REF = "UPDATE_LIST_REF";
+export const UPDATE_FILTER_INPUT_REF = "UPDATE_FILTER_INPUT_REF";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
 }
 
 type Item = Object;
+type Ref = any;
 
 export interface IContext {
-  listElement: HTMLElement | null;
-  filterInputElement: HTMLInputElement | null;
+  listRef: Ref;
+  filterInputRef: Ref;
   onChangeFilter(value: string): void;
   activeItemIndex: number;
   decoratedItems: Array<DecoratedItem<Item>>;
   filteredDecoratedItems: Array<DecoratedItem<Item>>;
+  prevFilteredDecoratedItems: Array<DecoratedItem<Item>>;
   activeDecoratedItem: DecoratedItem<Item>;
   filterString: string;
   itemMatchesFilter: any;
   itemMatchesInnerHTML(
     decoratedItem: DecoratedItem<Item>,
-    filterString: string
+    filterString: string,
+    getElementFromRef: Function
   ): boolean;
   onSelectOption(item: Item, selected: Item | Array<Item>): void;
   selected: Array<Item> | Item;
   autoTargetFirstItem: boolean;
   ephemeralString: string;
+  getElementFromRef(ref: Ref): HTMLElement | null;
 }
 
 interface ISchema {
@@ -77,39 +81,48 @@ type IEvent =
   | { type: "UPDATE_SELECTED"; selected: any }
   | { type: "CLEAR_EPHEMERAL_STRING" }
   | {
-      type: "UPDATE_LIST_ELEMENT";
-      listElement: HTMLUListElement | null;
+      type: "UPDATE_LIST_REF";
+      listRef: Ref;
     }
   | {
-      type: "UPDATE_FILTER_INPUT_ELEMENT";
-      filterInputElement: HTMLInputElement | null;
+      type: "UPDATE_FILTER_INPUT_REF";
+      filterInputRef: Ref;
     };
 
-const itemInnerHTML = (decoratedItem: DecoratedItem<Item>) => {
-  return decoratedItem.ref?.innerHTML.toLowerCase();
+const itemInnerHTML = (element: HTMLElement | null) => {
+  return element?.innerHTML.toLowerCase();
 };
 
-const itemMatchesInnerHTML = (
-  decoratedItem: DecoratedItem<Item>,
-  filterString: string
-) => {
-  const innerHTML = itemInnerHTML(decoratedItem);
+const itemMatchesInnerHTML = ({
+  decoratedItem,
+  string,
+  getElementFromRef
+}: {
+  decoratedItem: DecoratedItem<Item>;
+  string: String;
+  getElementFromRef(ref: any): HTMLElement | null;
+}) => {
+  const element = getElementFromRef(decoratedItem.ref);
+  const innerHTML = itemInnerHTML(element);
   if (!decoratedItem.ref || !innerHTML) return false;
-  return innerHTML.indexOf(filterString.toLocaleLowerCase()) > -1;
+  return innerHTML.indexOf(string.toLocaleLowerCase()) > -1;
 };
 
 const getActiveDecoratedItem = ({
-  decoratedItems,
+  filteredDecoratedItems,
   activeItemIndex
 }: IContext) => {
-  return decoratedItems[activeItemIndex];
+  return filteredDecoratedItems[activeItemIndex];
 };
 
-const incrementActiveItem = ({ activeItemIndex, decoratedItems }: IContext) => {
+const incrementActiveItem = ({
+  activeItemIndex,
+  filteredDecoratedItems
+}: IContext) => {
   let newActiveItemIndex;
   if (activeItemIndex === undefined) {
     newActiveItemIndex = 0;
-  } else if (activeItemIndex === decoratedItems.length - 1) {
+  } else if (activeItemIndex === filteredDecoratedItems.length - 1) {
     newActiveItemIndex = 0;
   } else {
     newActiveItemIndex = activeItemIndex + 1;
@@ -118,10 +131,13 @@ const incrementActiveItem = ({ activeItemIndex, decoratedItems }: IContext) => {
   return newActiveItemIndex;
 };
 
-const decrementActiveItem = ({ activeItemIndex, decoratedItems }: IContext) => {
+const decrementActiveItem = ({
+  activeItemIndex,
+  filteredDecoratedItems
+}: IContext) => {
   let newActiveItemIndex;
   if (!activeItemIndex || activeItemIndex <= 0) {
-    newActiveItemIndex = decoratedItems.length - 1;
+    newActiveItemIndex = filteredDecoratedItems.length - 1;
   } else {
     newActiveItemIndex = activeItemIndex - 1;
   }
@@ -132,7 +148,8 @@ const decrementActiveItem = ({ activeItemIndex, decoratedItems }: IContext) => {
 const filterItems = ({
   filterString,
   decoratedItems,
-  itemMatchesFilter
+  itemMatchesFilter,
+  filteredDecoratedItems
 }: IContext) => {
   const willFilter = !!filterString;
   if (willFilter) {
@@ -166,13 +183,18 @@ const fuzzyFindActiveItemIndex = ({
   decoratedItems,
   ephemeralString,
   itemMatchesFilter,
-  activeItemIndex
+  activeItemIndex,
+  getElementFromRef
 }: IContext) => {
   const firstMatch = decoratedItems.find(decoratedItem => {
     if (itemMatchesFilter) {
       return itemMatchesFilter(decoratedItem.item, ephemeralString);
     } else {
-      return itemMatchesInnerHTML(decoratedItem, ephemeralString);
+      return itemMatchesInnerHTML({
+        decoratedItem,
+        string: ephemeralString,
+        getElementFromRef
+      });
     }
   });
   if (!firstMatch) return activeItemIndex;
@@ -230,12 +252,15 @@ const updateDecoratedItems = (_: IContext, { decoratedItems }: any) => {
   return decoratedItems;
 };
 
-const updateListElement = (_: IContext, { listElement }: any) => {
-  return listElement;
+const updateListRef = (_: IContext, { listRef }: { listRef: Ref }) => {
+  return listRef;
 };
 
-const updateFilterInputElement = (_: IContext, { filterInputElement }: any) => {
-  return filterInputElement;
+const updateFilterInputRef = (
+  _: IContext,
+  { filterInputRef }: { filterInputRef: Ref }
+) => {
+  return filterInputRef;
 };
 
 export const isItemActive = (
@@ -263,17 +288,22 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
     initial: "closed",
     states: {
       open: {
+        entry: [
+          "focus",
+          assign<IContext>({ activeItemIndex: updateActiveItemIndex })
+        ],
         exit: [
           "clearFilterString",
           "clearActiveItem",
           assign<IContext>({
+            prevFilteredDecoratedItems: ({
+              filteredDecoratedItems
+            }: IContext) => filteredDecoratedItems
+          }),
+          assign<IContext>({
             filteredDecoratedItems: ({ decoratedItems }: IContext) =>
               decoratedItems
           })
-        ],
-        entry: [
-          "focus",
-          assign<IContext>({ activeItemIndex: updateActiveItemIndex })
         ],
         on: {
           [KEY_DOWN_SELECT]: {
@@ -317,7 +347,7 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
           [KEY_DOWN_ENTER]: {
             target: "closed",
             cond: { type: "canSelectItem" },
-            actions: ["handleKeyboardSelectItem"]
+            actions: "handleKeyboardSelectItem"
           },
           [KEY_DOWN_ESC]: {
             target: "closed"
@@ -369,17 +399,17 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
               })
             ]
           },
-          [UPDATE_LIST_ELEMENT]: {
+          [UPDATE_LIST_REF]: {
             actions: [
               assign<IContext>({
-                listElement: updateListElement
+                listRef: updateListRef
               })
             ]
           },
-          [UPDATE_FILTER_INPUT_ELEMENT]: {
+          [UPDATE_FILTER_INPUT_REF]: {
             actions: [
               assign<IContext>({
-                filterInputElement: updateFilterInputElement
+                filterInputRef: updateFilterInputRef
               })
             ]
           },
@@ -403,7 +433,9 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
     actions: {
       focus: (context: IContext) => {
         // Move this to the bottom of the stack to allow DOM to transition
-        const { filterInputElement, listElement } = context;
+        const { filterInputRef, listRef, getElementFromRef } = context;
+        const filterInputElement = getElementFromRef(filterInputRef);
+        const listElement = getElementFromRef(listRef);
         setTimeout(() => {
           if (filterInputElement) {
             filterInputElement.focus();
@@ -412,7 +444,14 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
           }
         }, 100);
       },
-      clearFilterString: ({ onChangeFilter, filterInputElement }: IContext) => {
+      clearFilterString: ({
+        onChangeFilter,
+        filterInputRef,
+        getElementFromRef
+      }: IContext) => {
+        const filterInputElement = getElementFromRef(
+          filterInputRef
+        ) as HTMLInputElement;
         assign({
           filterString: ""
         });
@@ -424,8 +463,9 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
 
       adjustScroll(context: IContext) {
         const activeDecoratedItem = getActiveDecoratedItem(context);
-        const { listElement } = context;
-        const activeItemElement = activeDecoratedItem.ref;
+        const { listRef, getElementFromRef } = context;
+        const listElement = getElementFromRef(listRef);
+        const activeItemElement = getElementFromRef(activeDecoratedItem.ref);
 
         if (!activeItemElement || !listElement) return;
 
@@ -460,10 +500,15 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
       handleKeyboardSelectItem: ({
         activeItemIndex,
         onSelectOption,
-        filteredDecoratedItems,
+        prevFilteredDecoratedItems,
         selected
       }: IContext) => {
-        onSelectOption(filteredDecoratedItems[activeItemIndex].item, selected);
+        // NOTE: the next state is computed (via assigns) before event transitions:
+        // https://xstate.js.org/docs/guides/context.html#action-order
+        onSelectOption(
+          prevFilteredDecoratedItems[activeItemIndex].item,
+          selected
+        );
       },
 
       handleClickItem: (

@@ -1,6 +1,6 @@
 type DecoratedItem<Item> = {
   item: Item;
-  ref: HTMLLIElement | null;
+  ref: Object | null;
 };
 
 export { DecoratedItem };

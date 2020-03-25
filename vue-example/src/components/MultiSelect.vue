@@ -49,7 +49,7 @@ import {
   SET_ACTIVE_ITEM,
   KEY_DOWN_SELECT,
   UPDATE_DECORATED_ITEMS,
-  UPDATE_LIST_ELEMENT,
+  UPDATE_LIST_REF,
   isItemActive,
   isItemSelected
 } from "use-dropdown";
@@ -102,7 +102,8 @@ const MultiSelect = defineComponent({
 
     const { state: machineState, send } = useMachine(selectMachine, {
       context: {
-        listElement: listRef.value as any,
+        listRef,
+        getElementFromRef: ref => ref,
         decoratedItems: state.decoratedItems,
         filteredDecoratedItems: state.decoratedItems,
         onSelectOption: handleSelectOption,
@@ -116,11 +117,11 @@ const MultiSelect = defineComponent({
 
     onMounted(() => {
       send({
-        type: UPDATE_LIST_ELEMENT,
-        listElement: listRef.value
+        type: UPDATE_LIST_REF,
+        listRef
       });
 
-      const refs = itemsRef?.value || [];
+      const refs = itemsRef.value || [];
       const decoratedItemsWithRefs = state.decoratedItems.map(
         (item: Item, index: number) => ({ ...item, ref: refs && refs[index] })
       );

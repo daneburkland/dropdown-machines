@@ -18,9 +18,7 @@ import {
   KEY_DOWN_FILTER,
   isItemActive,
   isItemSelected,
-  DecoratedItem,
-  UPDATE_FILTER_INPUT_ELEMENT,
-  UPDATE_LIST_ELEMENT
+  DecoratedItem
 } from "use-dropdown";
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
@@ -76,8 +74,9 @@ function useSelect({
   const [state, send] = useMachine(selectMachine, {
     context: {
       // TODO: pass the actual elements into context
-      listElement: listRef.current,
-      filterInputElement: filterInputRef.current,
+      listRef,
+      filterInputRef,
+      getElementFromRef: ref => ref?.current,
       onChangeFilter,
       decoratedItems,
       // TODO: how to default this
@@ -89,17 +88,6 @@ function useSelect({
       autoTargetFirstItem
     }
   });
-
-  useEffect(() => {
-    send({
-      type: UPDATE_FILTER_INPUT_ELEMENT,
-      filterInputElement: filterInputRef.current
-    });
-    send({
-      type: UPDATE_LIST_ELEMENT,
-      listElement: listRef.current
-    });
-  }, []);
 
   const handleInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
