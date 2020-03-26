@@ -15,7 +15,7 @@
     <div class="my-4">
       <label>Filtering Select</label>
       <div>
-        <FilterSelect autoTargetFirstItem="false" v-bind:items="items" />
+        <FilterSelect v-bind:items="items" />
       </div>
     </div>
   </div>

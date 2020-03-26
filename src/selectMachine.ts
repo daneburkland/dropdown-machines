@@ -148,8 +148,7 @@ const decrementActiveItem = ({
 const filterItems = ({
   filterString,
   decoratedItems,
-  itemMatchesFilter,
-  filteredDecoratedItems
+  itemMatchesFilter
 }: IContext) => {
   const willFilter = !!filterString;
   if (willFilter) {

@@ -11,33 +11,47 @@ import items from "./items";
 function App() {
   return (
     <div className="container mx-auto">
-      <h3>Basic Select</h3>
       <div className="m-4">
-        <Select items={items} />
+        <h3>Basic Select</h3>
+        <div>
+          <Select items={items} />
+        </div>
       </div>
-      <h3>Select; autoTargetFirstItem</h3>
       <div className="m-4">
-        <Select items={items} autoTargetFirstItem />
+        <h3>Select; autoTargetFirstItem</h3>
+        <div>
+          <Select items={items} autoTargetFirstItem />
+        </div>
       </div>
-      <h3>Basic MultiSelect</h3>
       <div className="m-4">
-        <MultiSelect items={items} />
+        <h3>Basic MultiSelect</h3>
+        <div>
+          <MultiSelect items={items} />
+        </div>
       </div>
-      <h3>Filtering select</h3>
       <div className="m-4">
-        <FilterSelect items={items} />
+        <h3>Filtering select</h3>
+        <div>
+          <FilterSelect items={items} />
+        </div>
       </div>
-      <h3>Filtering select; autoTargetFirstItem</h3>
       <div className="m-4">
-        <FilterSelect items={items} autoTargetFirstItem />
+        <h3>Filtering select; autoTargetFirstItem</h3>
+        <div>
+          <FilterSelect items={items} autoTargetFirstItem />
+        </div>
       </div>
-      <h3>Filtering multi-select</h3>
       <div className="m-4">
-        <FilterMultiSelect items={items} />
+        <h3>Filtering multi-select</h3>
+        <div>
+          <FilterMultiSelect items={items} />
+        </div>
       </div>
-      <h3>Filtering multi-select; autoTargetFirstItem</h3>
       <div className="m-4">
-        <FilterMultiSelect items={items} autoTargetFirstItem />
+        <h3>Filtering multi-select; autoTargetFirstItem</h3>
+        <div>
+          <FilterMultiSelect items={items} autoTargetFirstItem />
+        </div>
       </div>
       {/* <h3>Combobox</h3>
       <div className="m-4">
