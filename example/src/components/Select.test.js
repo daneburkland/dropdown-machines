@@ -64,7 +64,6 @@ describe("Select component", () => {
   });
 
   const testPlans = testModel.getSimplePathPlans();
-  console.log("testPlan", testPlans);
   testPlans.forEach(plan => {
     describe(plan.description, () => {
       afterEach(cleanup);

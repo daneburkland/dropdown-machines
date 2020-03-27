@@ -129,7 +129,7 @@ function useSelect({
     () => ({
       onChange: handleInputChange,
       onKeyDown: (e: any) => {
-        send({ type: KEY_DOWN_FILTER, e });
+        send({ type: KEY_DOWN_FILTER, charCode: e.which });
       },
       "data-testid": "filterInput",
       ref: filterInputRef
@@ -141,7 +141,7 @@ function useSelect({
     return {
       tabIndex: 0,
       onKeyDown: (e: any) => {
-        send({ type: KEY_DOWN_SELECT, e });
+        send({ type: KEY_DOWN_SELECT, charCode: e.which });
       },
       "data-testid": "select",
       onClick: () => send(CLICK_TRIGGER)

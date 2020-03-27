@@ -1,5 +1,6 @@
 import { Machine, assign, actions } from "xstate";
 import keycode from "keycode";
+
 const { send, cancel } = actions;
 import { DecoratedItem } from "./types";
 export const KEY_DOWN_FILTER = "KEY_DOWN_FILTER";
@@ -60,17 +61,17 @@ interface ISchema {
 }
 
 type IEvent =
-  | { type: "KEY_DOWN_FILTER"; e: any }
-  | { type: "KEY_DOWN_SELECT"; e: any }
-  | { type: "KEY_DOWN_UP"; e: any }
-  | { type: "KEY_DOWN_DOWN"; e: any }
-  | { type: "KEY_DOWN_ENTER"; e: any }
-  | { type: "KEY_DOWN_ESC"; e: any }
-  | { type: "KEY_DOWN_TAB"; e: any }
-  | { type: "KEY_DOWN_OTHER"; e: any }
+  | { type: "KEY_DOWN_FILTER"; charCode: number }
+  | { type: "KEY_DOWN_SELECT"; charCode: number }
+  | { type: "KEY_DOWN_OTHER"; charCode: number }
+  | { type: "KEY_DOWN_UP" }
+  | { type: "KEY_DOWN_DOWN" }
+  | { type: "KEY_DOWN_ENTER" }
+  | { type: "KEY_DOWN_ESC" }
+  | { type: "KEY_DOWN_TAB" }
   | { type: "CLICK_TRIGGER" }
   | { type: "CLICK_ITEM"; item: any }
-  | { type: "KEY_DOWN_SPACE"; e: any }
+  | { type: "KEY_DOWN_SPACE" }
   | {
       type: "UPDATE_DECORATED_ITEMS";
       decoratedItems: Array<DecoratedItem<Item>>;
@@ -173,9 +174,9 @@ const updateActiveItemIndex = ({
 
 const updateEphemeralString = (
   { ephemeralString = "" }: IContext,
-  { e }: any
+  { charCode }: any
 ) => {
-  return ephemeralString.concat(String.fromCharCode(e.which).toLowerCase());
+  return ephemeralString.concat(String.fromCharCode(charCode).toLowerCase());
 };
 
 const fuzzyFindActiveItemIndex = ({
@@ -200,47 +201,50 @@ const fuzzyFindActiveItemIndex = ({
   return decoratedItems.indexOf(firstMatch);
 };
 
-const getOpenSelectKeyDownEvent = (_: IContext, { e }: any) => {
-  switch (keycode(e.which)) {
+const getOpenSelectKeyDownEvent = (
+  _: IContext,
+  { charCode }: { charCode?: any }
+) => {
+  switch (keycode(charCode)) {
     case "up":
-      return { type: KEY_DOWN_UP, e };
+      return { type: KEY_DOWN_UP };
     case "down":
-      return { type: KEY_DOWN_DOWN, e };
+      return { type: KEY_DOWN_DOWN };
     case "space":
-      return { type: KEY_DOWN_SPACE, e };
+      return { type: KEY_DOWN_SPACE };
     case "enter":
-      return { type: KEY_DOWN_ENTER, e };
+      return { type: KEY_DOWN_ENTER };
     case "esc":
-      return { type: KEY_DOWN_ESC, e };
+      return { type: KEY_DOWN_ESC };
     case "tab":
-      return { type: KEY_DOWN_TAB, e };
+      return { type: KEY_DOWN_TAB };
     default:
-      return { type: KEY_DOWN_OTHER, e };
+      return { type: KEY_DOWN_OTHER, charCode };
   }
 };
 
-const getClosedSelectKeyDownEvent = (_: IContext, { e }: any) => {
-  switch (keycode(e.which)) {
+const getClosedSelectKeyDownEvent = (_: IContext, { charCode }: any) => {
+  switch (keycode(charCode)) {
     case "space":
-      return { type: KEY_DOWN_SPACE, e };
+      return { type: KEY_DOWN_SPACE };
     default:
       // TODO: better way to bail?
       return { type: "" };
   }
 };
 
-const getFilterKeyDownEvent = (_: IContext, { e }: any) => {
-  switch (keycode(e.which)) {
+const getFilterKeyDownEvent = (_: IContext, { charCode }: any) => {
+  switch (keycode(charCode)) {
     case "up":
-      return { type: KEY_DOWN_UP, e };
+      return { type: KEY_DOWN_UP };
     case "down":
-      return { type: KEY_DOWN_DOWN, e };
+      return { type: KEY_DOWN_DOWN };
     case "enter":
-      return { type: KEY_DOWN_ENTER, e };
+      return { type: KEY_DOWN_ENTER };
     case "esc":
-      return { type: KEY_DOWN_ESC, e };
+      return { type: KEY_DOWN_ESC };
     case "tab":
-      return { type: KEY_DOWN_TAB, e };
+      return { type: KEY_DOWN_TAB };
     default:
       // TODO: better way to bail?
       return { type: "" };

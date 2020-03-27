@@ -2,9 +2,6 @@ import React from "react";
 import { render, fireEvent, wait } from "@testing-library/react";
 import "@testing-library/jest-dom/extend-expect";
 import FilteringSelect from "./FilterSelect";
-import ControlledFilterStringUncontrolledFilteringSelect from "./ControlledFilterStringUncontrolledFilteringSelect";
-import UncontrolledFilterStringControlledFilteringSelect from "./UncontrolledFilterStringControlledFilteringSelect";
-import ControlledFilterStringControlledFilteringSelect from "./ControlledFilterStringControlledFilteringSelect";
 
 import items from "../items";
 
@@ -13,40 +10,11 @@ const Selects = [
     description:
       "Basic Select with uncontrolled filterString and uncontrolled filtering",
     getComponent: props => <FilteringSelect items={items} {...props} />
-  },
-  {
-    description:
-      "Select with controlled filterString and uncontrolled filtering",
-    getComponent: props => (
-      <ControlledFilterStringUncontrolledFilteringSelect
-        items={items}
-        {...props}
-      />
-    )
-  },
-  {
-    description:
-      "Select with uncontrolled filterString and controlled filtering",
-    getComponent: props => (
-      <UncontrolledFilterStringControlledFilteringSelect
-        items={items}
-        {...props}
-      />
-    )
-  },
-  {
-    description: "Select with controlled filterString and controlled filtering",
-    getComponent: props => (
-      <ControlledFilterStringControlledFilteringSelect
-        items={items}
-        {...props}
-      />
-    )
   }
 ];
 
 Selects.forEach(({ description, getComponent }) => {
-  describe(description, () => {
+  xdescribe(description, () => {
     test("sets correct value with click", () => {
       const { getByTestId, getAllByTestId, getByText } = render(getComponent());
 
