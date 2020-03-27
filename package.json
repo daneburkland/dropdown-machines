@@ -22,6 +22,7 @@
     "deploy": "gh-pages -d example/build"
   },
   "dependencies": {
+    "@xstate/test": "^0.3.0",
     "keycode": "^2.2.0",
     "xstate": "^4.8.0"
   },
