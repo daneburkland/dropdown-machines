@@ -9,17 +9,20 @@ import {
 import { useMachine } from "@xstate/react";
 import {
   selectMachine,
+  selectMachineEvents,
+  selectMachineHelpers,
+  DecoratedItem
+} from "use-dropdown";
+const {
   CLICK_TRIGGER,
   CLICK_ITEM,
   UPDATE_FILTER,
   SET_ACTIVE_ITEM,
   UPDATE_SELECTED,
   KEY_DOWN_SELECT,
-  KEY_DOWN_FILTER,
-  isItemActive,
-  isItemSelected,
-  DecoratedItem
-} from "use-dropdown";
+  KEY_DOWN_FILTER
+} = selectMachineEvents;
+const { isItemActive, isItemSelected } = selectMachineHelpers;
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
@@ -30,7 +33,6 @@ type Item = any;
 interface IuseSelect<T> {
   items: Array<T>;
   itemMatchesFilter?(item: T, filterString: string): boolean;
-  onChangeFilter?(filterString: string): void;
   selected: null | T | Array<T>;
   onSelectOption(item: T | null, selected: T | Array<T>): void;
   filterString?: string;
@@ -42,7 +44,6 @@ function useSelect({
   itemMatchesFilter,
   selected,
   onSelectOption,
-  onChangeFilter,
   autoTargetFirstItem
 }: IuseSelect<Item>) {
   const listRef = useRef<HTMLUListElement>(null);
@@ -52,37 +53,16 @@ function useSelect({
     return items.map(item => ({ item, ref: createRef<HTMLLIElement>() }));
   }, [items]);
 
-  const defaultItemDisplayValue = useCallback(decoratedItem => {
-    return decoratedItem.ref.current?.innerHTML.toLowerCase();
-  }, []);
-
-  const itemMatchesInnerHTML = useCallback(
-    (
-      decoratedItem: DecoratedItem<HTMLLIElement, Item>,
-      filterString: string
-    ) => {
-      if (!decoratedItem.ref.current) return false;
-      return (
-        defaultItemDisplayValue(decoratedItem).indexOf(
-          filterString.toLocaleLowerCase()
-        ) > -1
-      );
-    },
-    [defaultItemDisplayValue]
-  );
-
   const [state, send] = useMachine(selectMachine, {
     context: {
       // TODO: pass the actual elements into context
       listRef,
       filterInputRef,
       getElementFromRef: ref => ref?.current,
-      onChangeFilter,
       decoratedItems,
       // TODO: how to default this
       filteredDecoratedItems: decoratedItems,
       itemMatchesFilter,
-      itemMatchesInnerHTML,
       onSelectOption,
       selected,
       autoTargetFirstItem

@@ -43,6 +43,11 @@ import classnames from "classnames";
 import { itemMatchesFilter } from "../utils";
 import {
   selectMachine,
+  selectMachineEvents,
+  selectMachineHelpers
+} from "use-dropdown";
+
+const {
   CLICK_TRIGGER,
   CLICK_ITEM,
   SET_ACTIVE_ITEM,
@@ -51,10 +56,10 @@ import {
   UPDATE_LIST_REF,
   UPDATE_FILTER_INPUT_REF,
   UPDATE_FILTER,
-  KEY_DOWN_FILTER,
-  isItemActive,
-  isItemSelected
-} from "use-dropdown";
+  KEY_DOWN_FILTER
+} = selectMachineEvents;
+
+const { isItemActive, isItemSelected } = selectMachineHelpers;
 
 type Item = any;
 type DecoratedItem = {
@@ -134,7 +139,7 @@ const FilterSelect = defineComponent({
     });
 
     function handleKeydownSelect(e: KeyboardEvent) {
-      send({ type: KEY_DOWN_SELECT, e });
+      send({ type: KEY_DOWN_SELECT, charCode: e.which });
     }
 
     function handleClickSelect() {
@@ -158,10 +163,10 @@ const FilterSelect = defineComponent({
       e.preventDefault();
     }
 
-    function handleKeydownInput(e: Event) {
+    function handleKeydownInput(e: KeyboardEvent) {
       send({
         type: KEY_DOWN_FILTER,
-        e
+        charCode: e.which
       });
     }
 

@@ -3,25 +3,47 @@ import keycode from "keycode";
 
 const { send, cancel } = actions;
 import { DecoratedItem } from "./types";
-export const KEY_DOWN_FILTER = "KEY_DOWN_FILTER";
-export const KEY_DOWN_SELECT = "KEY_DOWN_SELECT";
-export const KEY_DOWN_UP = "KEY_DOWN_UP";
-export const KEY_DOWN_DOWN = "KEY_DOWN_DOWN";
-export const KEY_DOWN_ENTER = "KEY_DOWN_ENTER";
-export const KEY_DOWN_ESC = "KEY_DOWN_ESC";
-export const KEY_DOWN_TAB = "KEY_DOWN_TAB";
-export const KEY_DOWN_OTHER = "KEY_DOWN_OTHER";
-export const CLICK_TRIGGER = "CLICK_TRIGGER";
-export const CLICK_ITEM = "CLICK_ITEM";
-export const KEY_DOWN_SPACE = "KEY_DOWN_SPACE";
-export const UPDATE_FILTER = "UPDATE_FILTER";
-export const FILTER_ITEMS = "FILTER_ITEMS";
-export const SET_ACTIVE_ITEM = "SET_ACTIVE_ITEM";
-export const UPDATE_SELECTED = "UPDATE_SELECTED";
-export const CLEAR_EPHEMERAL_STRING = "CLEAR_EPHEMERAL_STRING";
-export const UPDATE_DECORATED_ITEMS = "UPDATE_DECORATED_ITEMS";
-export const UPDATE_LIST_REF = "UPDATE_LIST_REF";
-export const UPDATE_FILTER_INPUT_REF = "UPDATE_FILTER_INPUT_REF";
+const KEY_DOWN_FILTER = "KEY_DOWN_FILTER";
+const KEY_DOWN_SELECT = "KEY_DOWN_SELECT";
+const KEY_DOWN_UP = "KEY_DOWN_UP";
+const KEY_DOWN_DOWN = "KEY_DOWN_DOWN";
+const KEY_DOWN_ENTER = "KEY_DOWN_ENTER";
+const KEY_DOWN_ESC = "KEY_DOWN_ESC";
+const KEY_DOWN_TAB = "KEY_DOWN_TAB";
+const KEY_DOWN_OTHER = "KEY_DOWN_OTHER";
+const CLICK_TRIGGER = "CLICK_TRIGGER";
+const CLICK_ITEM = "CLICK_ITEM";
+const KEY_DOWN_SPACE = "KEY_DOWN_SPACE";
+const UPDATE_FILTER = "UPDATE_FILTER";
+const FILTER_ITEMS = "FILTER_ITEMS";
+const SET_ACTIVE_ITEM = "SET_ACTIVE_ITEM";
+const UPDATE_SELECTED = "UPDATE_SELECTED";
+const CLEAR_EPHEMERAL_STRING = "CLEAR_EPHEMERAL_STRING";
+const UPDATE_DECORATED_ITEMS = "UPDATE_DECORATED_ITEMS";
+const UPDATE_LIST_REF = "UPDATE_LIST_REF";
+const UPDATE_FILTER_INPUT_REF = "UPDATE_FILTER_INPUT_REF";
+
+export const EVENTS = {
+  KEY_DOWN_FILTER,
+  KEY_DOWN_SELECT,
+  KEY_DOWN_UP,
+  KEY_DOWN_DOWN,
+  KEY_DOWN_ENTER,
+  KEY_DOWN_ESC,
+  KEY_DOWN_TAB,
+  KEY_DOWN_OTHER,
+  CLICK_TRIGGER,
+  CLICK_ITEM,
+  KEY_DOWN_SPACE,
+  UPDATE_FILTER,
+  FILTER_ITEMS,
+  SET_ACTIVE_ITEM,
+  UPDATE_SELECTED,
+  CLEAR_EPHEMERAL_STRING,
+  UPDATE_DECORATED_ITEMS,
+  UPDATE_LIST_REF,
+  UPDATE_FILTER_INPUT_REF
+};
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
@@ -33,7 +55,6 @@ type Ref = any;
 export interface IContext {
   listRef: Ref;
   filterInputRef: Ref;
-  onChangeFilter(value: string): void;
   activeItemIndex: number;
   decoratedItems: Array<DecoratedItem<Item>>;
   filteredDecoratedItems: Array<DecoratedItem<Item>>;
@@ -41,11 +62,6 @@ export interface IContext {
   activeDecoratedItem: DecoratedItem<Item>;
   filterString: string;
   itemMatchesFilter: any;
-  itemMatchesInnerHTML(
-    decoratedItem: DecoratedItem<Item>,
-    filterString: string,
-    getElementFromRef: Function
-  ): boolean;
   onSelectOption(item: Item, selected: Item | Array<Item>): void;
   selected: Array<Item> | Item;
   autoTargetFirstItem: boolean;
@@ -368,7 +384,6 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
           [UPDATE_FILTER]: {
             actions: [
               assign({ filterString: (_, { filterString }) => filterString }),
-              "handleUpdateFilter",
               assign<IContext>({ filteredDecoratedItems: filterItems }),
               assign<IContext>({ activeItemIndex: updateActiveItemIndex })
             ]
@@ -447,18 +462,13 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
           }
         }, 100);
       },
-      clearFilterString: ({
-        onChangeFilter,
-        filterInputRef,
-        getElementFromRef
-      }: IContext) => {
+      clearFilterString: ({ filterInputRef, getElementFromRef }: IContext) => {
         const filterInputElement = getElementFromRef(
           filterInputRef
         ) as HTMLInputElement;
         assign({
           filterString: ""
         });
-        onChangeFilter && onChangeFilter("");
         if (filterInputElement) {
           filterInputElement.value = "";
         }
@@ -489,11 +499,6 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
         } else if (shouldAdjustScrollUp) {
           listElement.scrollTop = itemTop;
         }
-      },
-
-      handleUpdateFilter: ({ onChangeFilter }: IContext, e: any) => {
-        const { filterString } = e;
-        onChangeFilter && onChangeFilter(filterString);
       },
 
       clearActiveItem() {

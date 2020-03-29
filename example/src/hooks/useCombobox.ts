@@ -1,14 +1,19 @@
+import { useCallback, useMemo, createRef, useRef } from "react";
+import { useMachine } from "@xstate/react";
 import {
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  FormEvent,
-  useRef
-} from "react";
-import useList from "./useList";
-import usePrevious from "./usePrevious";
-import useHandleKeydown from "./useHandleKeydown";
+  comboboxMachine,
+  comboboxMachineEvents,
+  comboboxMachineHelpers,
+  DecoratedItem
+} from "use-dropdown";
+const {
+  BLUR,
+  KEY_DOWN_COMBOBOX,
+  UPDATE_VALUE,
+  SET_ACTIVE_ITEM,
+  CLICK_ITEM
+} = comboboxMachineEvents;
+const { isItemActive } = comboboxMachineHelpers;
 
 export function isArray<T>(value: T | Array<T>): value is Array<T> {
   return Array.isArray(value);
@@ -18,177 +23,84 @@ type Item = any;
 
 interface IUseCombobox<T> {
   items: Array<T>;
-  value?: string;
-  onUpdateValue?(value: string): void;
-  onSelectOption?(item: T): void;
-  itemMatchesFilter?(item: T, filterString: string): boolean;
   autoTargetFirstItem?: boolean;
   inlineAutoComplete?: boolean;
+  itemDisplayValue(item: Item): string;
 }
 
 function useCombobox({
   items,
-  itemMatchesFilter,
-  value: controlledValue,
-  onUpdateValue: onUpdateControlledValue,
-  onSelectOption: onSelectControlledOption,
+  inlineAutoComplete,
   autoTargetFirstItem,
-  inlineAutoComplete
+  itemDisplayValue
 }: IUseCombobox<Item>) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [uncontrolledValue, setUncontrolledValue] = useState<string>("");
-  const [activeItem, setActiveItem] = useState<Item | null>(null);
-  const [autoCompleteStem, setAutoCompleteStem] = useState("");
   const comboboxRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
-  // TODO: throw a warning if inlineAutoComplete and value are supplied
-  const value = useMemo(() => controlledValue || uncontrolledValue, [
-    controlledValue,
-    uncontrolledValue
-  ]);
-  const prevValue = usePrevious(value) || "";
-  const prevAutocompleteStem = usePrevious(autoCompleteStem) || "";
+  const decoratedItems = useMemo(() => {
+    return items.map(item => ({ item, ref: createRef<HTMLLIElement>() }));
+  }, [items]);
 
-  const close = useCallback(() => {
-    comboboxRef.current?.blur();
-    setIsOpen(false);
-    setActiveItem(null);
-  }, [comboboxRef.current, setIsOpen, setActiveItem]);
-
-  const handleSelectOption = useCallback(
-    decoratedItem => {
-      if (!!onSelectControlledOption) {
-        onSelectControlledOption(decoratedItem.item);
-      } else {
-        setUncontrolledValue(defaultItemDisplayValue(decoratedItem));
-      }
-      close();
-    },
-    [onSelectControlledOption, setUncontrolledValue, close]
-  );
-
-  const {
-    decoratedItems,
-    getItemProps,
-    getListProps,
-    isItemActive,
-    decrementActiveItem,
-    incrementActiveItem,
-    defaultItemDisplayValue,
-    activeDecoratedItem
-  } = useList({
-    items,
-    activeItem,
-    setActiveItem,
-    filterString: value,
-    itemMatchesFilter,
-    onClickItem: handleSelectOption,
-    autoTargetFirstItem: autoTargetFirstItem,
-    additionalItemProps: {
-      onMouseDown: () => handleSelectOption(activeDecoratedItem)
+  const [state, send] = useMachine(comboboxMachine, {
+    context: {
+      comboboxRef,
+      getElementFromRef: ref => ref?.current,
+      decoratedItems,
+      // TODO: default this
+      // TODO:default this
+      value: "",
+      autoCompleteStemValue: "",
+      inlineAutoComplete,
+      autoTargetFirstItem,
+      itemDisplayValue
     }
   });
 
-  const isFocused = useMemo(
-    () => document.activeElement === comboboxRef.current,
-    [document.activeElement, comboboxRef.current]
-  );
+  const getListProps = useCallback(() => {
+    return {
+      ref: listRef,
+      "data-testid": "listBox"
+    };
+  }, []);
 
-  const hasMatches = useMemo(() => {
-    return !!value && !!decoratedItems.length;
-  }, [value, decoratedItems.length]);
-
-  useEffect(() => {
-    if (hasMatches && isFocused) {
-      setIsOpen(true);
-    } else {
-      setIsOpen(false);
-      setActiveItem(null);
-    }
-  }, [hasMatches, value]);
-
-  useEffect(() => {
-    if (activeItem && inlineAutoComplete) {
-      comboboxRef.current?.setSelectionRange(
-        autoCompleteStem.length,
-        value.length
-      );
-    }
-  }, [value]);
-
-  const handleKeydownTab = useCallback(() => {
-    if (activeItem && autoTargetFirstItem) {
-      handleSelectOption(activeDecoratedItem);
-    }
-  }, [activeDecoratedItem, autoTargetFirstItem, handleSelectOption]);
-
-  const comboboxKeydownMap = useMemo(
-    () => ({
-      up: decrementActiveItem,
-      down: incrementActiveItem,
-      enter: () => handleSelectOption(activeDecoratedItem),
-      tab: handleKeydownTab
-    }),
-    [
-      decrementActiveItem,
-      incrementActiveItem,
-      activeDecoratedItem,
-      handleSelectOption
-    ]
-  );
-
-  const { handleKeyDown } = useHandleKeydown(comboboxKeydownMap);
-
-  const didBackspace = useMemo(() => {
-    return autoCompleteStem.length <= prevAutocompleteStem.length;
-  }, [prevValue, value, autoCompleteStem]);
-
-  useEffect(() => {
-    if (activeItem && inlineAutoComplete && !!decoratedItems.length) {
-      if (value === autoCompleteStem && didBackspace) {
-        return;
-      }
-      const newAutoCompleteValue = defaultItemDisplayValue(decoratedItems[0]);
-      setUncontrolledValue(newAutoCompleteValue);
-    }
-  }, [activeItem, value, didBackspace]);
-
-  const handleChange = useCallback(
-    (e: FormEvent) => {
-      if (onUpdateControlledValue) {
-        onUpdateControlledValue((<HTMLInputElement>e.target).value);
-      } else {
-        if (inlineAutoComplete) {
-          setAutoCompleteStem((<HTMLInputElement>e.target).value);
-        }
-        setUncontrolledValue((<HTMLInputElement>e.target).value);
-      }
-    },
-    [onUpdateControlledValue, setUncontrolledValue]
-  );
-
-  function handleBlur() {
-    setIsOpen(false);
-  }
+  const getItemProps = (decoratedItem: DecoratedItem<HTMLLIElement, Item>) => {
+    const { ref } = decoratedItem;
+    return {
+      ref,
+      onMouseMove: () => send({ type: SET_ACTIVE_ITEM, decoratedItem }),
+      onClick: () =>
+        send({
+          type: CLICK_ITEM,
+          item: decoratedItem.item
+        }),
+      "data-testid": "option"
+    };
+  };
 
   const getComboboxProps = useCallback(() => {
     return {
       tabIndex: 0,
       ref: comboboxRef,
-      onKeyDown: handleKeyDown,
-      onChange: handleChange,
-      onBlur: handleBlur,
-      value
+      onKeyDown: (e: KeyboardEvent) => {
+        send({ type: KEY_DOWN_COMBOBOX, charCode: e.which });
+      },
+      onChange: (e: KeyboardEvent) => {
+        send({ type: UPDATE_VALUE, value: e.target.value });
+      },
+      onBlur: () => send(BLUR),
+      value: state.context.value
     };
-  }, [handleKeyDown]);
+  }, [state, send]);
+
+  const isOpen = useMemo(() => state.value === "open", [state.value]);
 
   return {
-    setIsOpen,
+    state,
     isOpen,
-    decoratedItems,
-    getItemProps,
-    getListProps,
+    decoratedItems: state.context.filteredDecoratedItems,
     getComboboxProps,
+    getListProps,
+    getItemProps,
     isItemActive
   };
 }

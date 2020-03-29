@@ -36,15 +36,20 @@ import {
 import classnames from "classnames";
 import {
   selectMachine,
+  selectMachineEvents,
+  selectMachineHelpers
+} from "use-dropdown";
+
+const {
   CLICK_TRIGGER,
   CLICK_ITEM,
   SET_ACTIVE_ITEM,
   KEY_DOWN_SELECT,
   UPDATE_DECORATED_ITEMS,
-  UPDATE_LIST_REF,
-  isItemActive,
-  isItemSelected
-} from "use-dropdown";
+  UPDATE_LIST_REF
+} = selectMachineEvents;
+
+const { isItemActive, isItemSelected } = selectMachineHelpers;
 
 type Item = any;
 type DecoratedItem = {
@@ -116,7 +121,7 @@ const Select = defineComponent({
     });
 
     function handleKeydownSelect(e: KeyboardEvent) {
-      send({ type: KEY_DOWN_SELECT, e });
+      send({ type: KEY_DOWN_SELECT, charCode: e.which });
     }
 
     function handleClickSelect() {

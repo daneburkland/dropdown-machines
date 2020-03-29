@@ -1,19 +1,19 @@
 import selectMachine, {
-  CLICK_TRIGGER,
-  CLICK_ITEM,
-  UPDATE_FILTER,
-  SET_ACTIVE_ITEM,
-  UPDATE_SELECTED,
-  KEY_DOWN_SELECT,
-  KEY_DOWN_FILTER,
-  UPDATE_DECORATED_ITEMS,
-  UPDATE_LIST_REF,
-  UPDATE_FILTER_INPUT_REF,
-  isItemActive,
-  isItemSelected
+  EVENTS as selectMachineEvents,
+  isItemActive as selectMachineIsItemActive,
+  isItemSelected as selectMachineHelpersIsItemSelected
 } from "./selectMachine";
+
+const selectMachineHelpers = { isItemActive: selectMachineIsItemActive, isItemSelected: selectMachineHelpersIsItemSelected}
+
+import comboboxMachine, {
+  EVENTS as comboboxMachineEvents,
+  isItemActive as comboboxMachineIsItemActive
+} from './comboboxMachine'
+
+const comboboxMachineHelpers = { isItemActive: comboboxMachineIsItemActive}
 
 import { DecoratedItem } from "./types";
 
-export { selectMachine, CLICK_TRIGGER, CLICK_ITEM, UPDATE_FILTER, SET_ACTIVE_ITEM, UPDATE_SELECTED, KEY_DOWN_SELECT, KEY_DOWN_FILTER, UPDATE_DECORATED_ITEMS, UPDATE_LIST_REF, UPDATE_FILTER_INPUT_REF, isItemActive, isItemSelected };  export type { DecoratedItem };
+export { selectMachine, selectMachineEvents, selectMachineHelpers, comboboxMachine, comboboxMachineEvents, comboboxMachineHelpers };  export type { DecoratedItem };
 
