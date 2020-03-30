@@ -12,7 +12,7 @@ interface IComboboxProps {
 }
 
 function Combobox({ items }: IComboboxProps) {
-  const itemDisplayValue = ({ name }: Item) => name;
+  const getItemDisplayValue = ({ name }: Item) => name;
   const {
     state,
     isOpen,
@@ -23,7 +23,7 @@ function Combobox({ items }: IComboboxProps) {
     isItemActive
   } = useCombobox({
     items,
-    itemDisplayValue
+    getItemDisplayValue
   });
 
   return (
@@ -51,7 +51,7 @@ function Combobox({ items }: IComboboxProps) {
                 "bg-gray-200": isItemActive(decoratedItem, state.context)
               })}
             >
-              {itemDisplayValue(decoratedItem.item)}
+              {getItemDisplayValue(decoratedItem.item)}
             </li>
           )
         )}

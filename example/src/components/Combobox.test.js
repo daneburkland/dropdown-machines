@@ -3,12 +3,12 @@ import React from "react";
 import { render, fireEvent, wait, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/extend-expect";
 import { createModel } from "@xstate/test";
-import Select from "./Select";
+import Combobox from "./Combobox";
 
 import items from "../items";
 
-const selectMachine = Machine({
-  id: "select",
+const comboboxMachine = Machine({
+  id: "combobox",
   initial: "closed",
   states: {
     open: {
@@ -19,8 +19,8 @@ const selectMachine = Machine({
         }
       },
       on: {
-        CLICK_TRIGGER: "closed",
-        KEY_DOWN_SELECT_ESC: "closed"
+        KEY_DOWN_ESC: "closed",
+        KEY_DOWN_TAB: "closed"
       }
     },
     closed: {
@@ -32,34 +32,37 @@ const selectMachine = Machine({
         }
       },
       on: {
-        CLICK_TRIGGER: "open",
-        KEY_DOWN_SELECT_SPACE: "open"
+        KEY_PRESS_COMBOBOX: "open"
       }
     }
   }
 });
 
-describe("Select component", () => {
-  const testModel = createModel(selectMachine).withEvents({
-    KEY_DOWN_SELECT_SPACE: ({ getByTestId }) => {
-      const selectElement = getByTestId("select");
-      fireEvent.focus(selectElement);
-      fireEvent.keyDown(selectElement, {
+describe("Combobox component", () => {
+  const testModel = createModel(comboboxMachine).withEvents({
+    KEY_PRESS_COMBOBOX: ({ getByTestId }) => {
+      const comboboxElement = getByTestId("combobox");
+      fireEvent.focus(comboboxElement);
+      fireEvent.keyDown(comboboxElement, {
         key: "Space",
         keyCode: 32
       });
     },
-    KEY_DOWN_SELECT_ESC: ({ getByTestId }) => {
-      const selectElement = getByTestId("select");
-      fireEvent.focus(selectElement);
-      fireEvent.keyDown(selectElement, {
-        key: "Escape",
-        keyCode: 27
+    KEY_DOWN_ESC: ({ getByTestId }) => {
+      const comboboxElement = getByTestId("combobox");
+      fireEvent.focus(comboboxElement);
+      fireEvent.keyDown(comboboxElement, {
+        key: "f",
+        keyCode: 70
       });
     },
-    CLICK_TRIGGER: ({ getByTestId }) => {
-      const selectElement = getByTestId("select");
-      fireEvent.click(selectElement);
+    KEY_DOWN_TAB: ({ getByTestId }) => {
+      const comboboxElement = getByTestId("tab");
+      fireEvent.focus(comboboxElement);
+      fireEvent.keyDown(comboboxElement, {
+        key: "tab",
+        keyCode: 9
+      });
     }
   });
 
@@ -69,7 +72,7 @@ describe("Select component", () => {
       afterEach(cleanup);
       plan.paths.forEach(path => {
         it(path.description, () => {
-          const rendered = render(<Select items={items} />);
+          const rendered = render(<Combobox items={items} />);
           return path.test(rendered);
         });
       });

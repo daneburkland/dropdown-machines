@@ -25,14 +25,14 @@ interface IUseCombobox<T> {
   items: Array<T>;
   autoTargetFirstItem?: boolean;
   inlineAutoComplete?: boolean;
-  itemDisplayValue(item: Item): string;
+  getItemDisplayValue(item: Item): string;
 }
 
 function useCombobox({
   items,
   inlineAutoComplete,
   autoTargetFirstItem,
-  itemDisplayValue
+  getItemDisplayValue
 }: IUseCombobox<Item>) {
   const comboboxRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -52,7 +52,7 @@ function useCombobox({
       autoCompleteStemValue: "",
       inlineAutoComplete,
       autoTargetFirstItem,
-      itemDisplayValue
+      getItemDisplayValue
     }
   });
 
@@ -88,7 +88,8 @@ function useCombobox({
         send({ type: UPDATE_VALUE, value: e.target.value });
       },
       onBlur: () => send(BLUR),
-      value: state.context.value
+      value: state.context.value,
+      "data-testid": "combobox"
     };
   }, [state, send]);
 

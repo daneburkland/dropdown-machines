@@ -51,7 +51,7 @@ export interface IContext {
   autoTargetFirstItem: boolean;
   getElementFromRef(ref: Ref): HTMLElement;
   inlineAutoComplete: boolean;
-  itemDisplayValue(item: Item): string;
+  getItemDisplayValue(item: Item): string;
 }
 
 interface ISchema {
@@ -83,21 +83,17 @@ type IEvent =
       comboboxRef: Ref;
     };
 
-const itemInnerHTML = (element: HTMLElement) => {
-  return element?.innerHTML.toLowerCase();
-};
-
 const itemMatchesValue = ({
   decoratedItem,
   string,
-  itemDisplayValue
+  getItemDisplayValue
 }: {
   decoratedItem: DecoratedItem<Item>;
   string: String;
-  itemDisplayValue(item: Item): string;
+  getItemDisplayValue(item: Item): string;
 }) => {
   return (
-    itemDisplayValue(decoratedItem.item).slice(0, string.length) === string
+    getItemDisplayValue(decoratedItem.item).slice(0, string.length) === string
   );
 };
 
@@ -108,11 +104,11 @@ const getActiveDecoratedItem = ({
   return filteredDecoratedItems[activeItemIndex];
 };
 
-const getActiveDecoratedItemInnerHTML = (context: IContext) => {
-  const activeDecoratedItem = getActiveDecoratedItem(context);
-  const element = context.getElementFromRef(activeDecoratedItem?.ref);
-  if (!element) return null;
-  return itemInnerHTML(element);
+const getPrevActiveDecoratedItem = ({
+  prevFilteredDecoratedItems,
+  activeItemIndex
+}: IContext) => {
+  return prevFilteredDecoratedItems[activeItemIndex];
 };
 
 const incrementActiveItem = ({
@@ -146,7 +142,7 @@ const decrementActiveItem = ({
 };
 
 const filterItems = (
-  { decoratedItems, itemDisplayValue }: IContext,
+  { decoratedItems, getItemDisplayValue }: IContext,
   { value }: any
 ) => {
   const willFilter = !!value;
@@ -156,7 +152,7 @@ const filterItems = (
         return itemMatchesValue({
           decoratedItem,
           string: value,
-          itemDisplayValue
+          getItemDisplayValue
         });
       }
       return true;
@@ -201,7 +197,11 @@ const updateComboboxRef = (
 };
 
 const updateValue = (context: IContext, { value }: any) => {
-  const { inlineAutoComplete, autoCompleteStemValue } = context;
+  const {
+    inlineAutoComplete,
+    autoCompleteStemValue,
+    getItemDisplayValue
+  } = context;
 
   if (inlineAutoComplete) {
     // User backspaced, get rid of the selection range
@@ -210,12 +210,12 @@ const updateValue = (context: IContext, { value }: any) => {
     // User backspaced without a selection range
     if (value.length < autoCompleteStemValue.length) return value;
 
-    const activeDecoratedItemInnerHTML = getActiveDecoratedItemInnerHTML(
-      context
-    );
+    const activeDecoratedItem = getActiveDecoratedItem(context);
+    if (!activeDecoratedItem) return value;
 
-    if (!activeDecoratedItemInnerHTML) return value;
-    return activeDecoratedItemInnerHTML;
+    const itemDisplayValue = getItemDisplayValue(activeDecoratedItem.item);
+
+    return itemDisplayValue;
   } else {
     return value;
   }
@@ -230,11 +230,11 @@ export const isItemActive = (
 };
 
 const handleKeyboardSelectItem = (context: IContext) => {
-  const activeDecoratedItemInnerHTML = getActiveDecoratedItemInnerHTML(context);
+  const { getItemDisplayValue } = context;
+  const { item } = getPrevActiveDecoratedItem(context);
+  const itemDisplayValue = getItemDisplayValue(item);
 
-  return !!activeDecoratedItemInnerHTML
-    ? activeDecoratedItemInnerHTML
-    : context.value;
+  return !!itemDisplayValue ? itemDisplayValue : context.value;
 };
 
 const comboboxMachine = Machine<IContext, ISchema, IEvent>(
@@ -246,6 +246,11 @@ const comboboxMachine = Machine<IContext, ISchema, IEvent>(
         entry: ["focus"],
         exit: [
           "clearActiveItem",
+          assign<IContext>({
+            prevFilteredDecoratedItems: ({
+              filteredDecoratedItems
+            }: IContext) => filteredDecoratedItems
+          }),
           assign<IContext>({
             filteredDecoratedItems: ({ decoratedItems }: IContext) =>
               decoratedItems
