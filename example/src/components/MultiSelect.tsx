@@ -2,7 +2,7 @@ import React, { useState, MouseEvent } from "react";
 import classnames from "classnames";
 import useSelect from "../hooks/useSelect";
 import { itemStyles, listBoxStyles, listBoxContainerStyles } from "./Select";
-import { DecoratedItem } from "use-dropdown";
+import { DecoratedItem } from "dropdown-machines";
 
 export const closeIcon = (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">

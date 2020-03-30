@@ -1,6 +1,6 @@
 import React from "react";
 import classnames from "classnames";
-import { DecoratedItem } from "use-dropdown";
+import { DecoratedItem } from "dropdown-machines";
 import useCombobox from "../hooks/useCombobox";
 
 type Item = {

@@ -1,10 +1,10 @@
 {
-  "name": "select-machines",
+  "name": "dropdown-machines",
   "version": "1.0.0",
-  "description": "A set of headless components for building custom dropdowns",
+  "description": "A set of state machines for building custom dropdowns",
   "author": "@daneburkland",
   "license": "MIT",
-  "repository": "@daneburkland/use-dropdown",
+  "repository": "@daneburkland/dropdown-machines",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.es.js",

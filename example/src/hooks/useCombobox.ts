@@ -5,7 +5,7 @@ import {
   comboboxMachineEvents,
   comboboxMachineHelpers,
   DecoratedItem
-} from "use-dropdown";
+} from "dropdown-machines";
 const {
   BLUR,
   KEY_DOWN_COMBOBOX,

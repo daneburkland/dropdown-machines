@@ -115,6 +115,7 @@ const incrementActiveItem = ({
   activeItemIndex,
   filteredDecoratedItems
 }: IContext) => {
+  console.log("incre");
   let newActiveItemIndex;
   if (activeItemIndex === undefined) {
     newActiveItemIndex = 0;

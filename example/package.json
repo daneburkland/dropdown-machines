@@ -1,6 +1,6 @@
 {
-  "name": "use-dropdown-example",
-  "homepage": "https://@daneburkland.github.io/use-dropdown",
+  "name": "dropdown-machines-example",
+  "homepage": "https://@daneburkland.github.io/dropdown-machines",
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
@@ -17,7 +17,7 @@
     "react-dom": "^16.9.23",
     "react-scripts": "^3.0.1",
     "typescript": "^3.8.3",
-    "use-dropdown": "file:..",
+    "dropdown-machines": "file:..",
     "xstate": "^4.8.0"
   },
   "devDependencies": {

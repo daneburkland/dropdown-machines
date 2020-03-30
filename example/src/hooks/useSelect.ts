@@ -12,7 +12,7 @@ import {
   selectMachineEvents,
   selectMachineHelpers,
   DecoratedItem
-} from "use-dropdown";
+} from "dropdown-machines";
 const {
   CLICK_TRIGGER,
   CLICK_ITEM,

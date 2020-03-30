@@ -1,6 +1,6 @@
 {
-  "short_name": "use-dropdown",
-  "name": "use-dropdown",
+  "short_name": "dropdown-machines",
+  "name": "dropdown-machines",
   "start_url": "./index.html",
   "display": "standalone",
   "theme_color": "#000000",

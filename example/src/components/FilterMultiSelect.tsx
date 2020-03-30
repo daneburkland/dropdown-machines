@@ -1,7 +1,7 @@
 import React, { useState, MouseEvent } from "react";
 import classnames from "classnames";
 import useSelect from "../hooks/useSelect";
-import { DecoratedItem } from "use-dropdown";
+import { DecoratedItem } from "dropdown-machines";
 import { itemMatchesFilter } from "../utils";
 import {
   multiSelectStyles,

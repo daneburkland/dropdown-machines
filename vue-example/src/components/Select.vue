@@ -5,7 +5,9 @@
       @keydown="handleKeydownSelect"
       @click="handleClickSelect"
       tabindex="0"
-    >{{ !!state.selected ? state.selected.name : "" }}</div>
+    >
+      {{ !!state.selected ? state.selected.name : "" }}
+    </div>
     <ul ref="listRef" :class="listClasses" v-show="isOpen()">
       <li
         v-for="decoratedItem in state.decoratedItems"
@@ -14,7 +16,9 @@
         :class="getItemClasses(decoratedItem)"
         @mousemove="() => handleMousemoveItem(decoratedItem)"
         @click="() => handleClickItem(decoratedItem)"
-      >{{ decoratedItem.item.name }}</li>
+      >
+        {{ decoratedItem.item.name }}
+      </li>
     </ul>
   </div>
 </template>
@@ -38,7 +42,7 @@ import {
   selectMachine,
   selectMachineEvents,
   selectMachineHelpers
-} from "use-dropdown";
+} from "dropdown-machines";
 
 const {
   CLICK_TRIGGER,
@@ -103,6 +107,8 @@ const Select = defineComponent({
     }
 
     onMounted(() => {
+      // There may be a more Vue-y way to do this...but bc the refs get passed to the machine
+      // before they get attached to DOM elements, we need to manually update them
       send({
         type: UPDATE_LIST_REF,
         listRef

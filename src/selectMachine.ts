@@ -417,6 +417,8 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
               })
             ]
           },
+          // Currently used in Vue examples...there may be a more Vue-y way to do this...but bc the refs get passed to the machine
+          // before they get attached to DOM elements, we need to manually update them
           [UPDATE_LIST_REF]: {
             actions: [
               assign<IContext>({
@@ -435,6 +437,9 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
             actions: [
               assign<IContext>({
                 decoratedItems: updateDecoratedItems
+              }),
+              assign<IContext>({
+                filteredDecoratedItems: updateDecoratedItems
               })
             ]
           }
@@ -476,6 +481,7 @@ const selectMachine = Machine<IContext, ISchema, IEvent>(
 
       adjustScroll(context: IContext) {
         const activeDecoratedItem = getActiveDecoratedItem(context);
+
         const { listRef, getElementFromRef } = context;
         const listElement = getElementFromRef(listRef);
         const activeItemElement = getElementFromRef(activeDecoratedItem.ref);

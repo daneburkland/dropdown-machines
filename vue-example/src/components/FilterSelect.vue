@@ -5,7 +5,9 @@
       @keydown="handleKeydownSelect"
       @click="handleClickSelect"
       tabindex="0"
-    >{{ !!state.selected ? state.selected.name : "" }}</div>
+    >
+      {{ !!state.selected ? state.selected.name : "" }}
+    </div>
     <ul ref="listRef" :class="listClasses" v-show="isOpen()">
       <input
         ref="filterInputRef"
@@ -20,7 +22,9 @@
         :class="getItemClasses(decoratedItem)"
         @mousemove="() => handleMousemoveItem(decoratedItem)"
         @click="() => handleClickItem(decoratedItem)"
-      >{{ decoratedItem.item.name }}</li>
+      >
+        {{ decoratedItem.item.name }}
+      </li>
     </ul>
   </div>
 </template>
@@ -45,7 +49,7 @@ import {
   selectMachine,
   selectMachineEvents,
   selectMachineHelpers
-} from "use-dropdown";
+} from "dropdown-machines";
 
 const {
   CLICK_TRIGGER,
