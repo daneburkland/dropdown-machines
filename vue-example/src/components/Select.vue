@@ -5,9 +5,7 @@
       @keydown="handleKeydownSelect"
       @click="handleClickSelect"
       tabindex="0"
-    >
-      {{ !!state.selected ? state.selected.name : "" }}
-    </div>
+    >{{ !!state.selected ? state.selected.name : "" }}</div>
     <ul ref="listRef" :class="listClasses" v-show="isOpen()">
       <li
         v-for="decoratedItem in state.decoratedItems"
@@ -16,9 +14,7 @@
         :class="getItemClasses(decoratedItem)"
         @mousemove="() => handleMousemoveItem(decoratedItem)"
         @click="() => handleClickItem(decoratedItem)"
-      >
-        {{ decoratedItem.item.name }}
-      </li>
+      >{{ decoratedItem.item.name }}</li>
     </ul>
   </div>
 </template>
@@ -77,6 +73,8 @@ const Select = defineComponent({
   },
   setup(props: IProps) {
     const itemsRef = ref(null);
+    const listRef = ref(null);
+
     const state: IState = reactive({
       selected: null,
       decoratedItems: props.items.map((item: Item) => ({
@@ -84,8 +82,6 @@ const Select = defineComponent({
         item
       }))
     });
-
-    const listRef = ref(null);
 
     function handleSelectOption(item: Item) {
       state.selected = item;
@@ -101,10 +97,6 @@ const Select = defineComponent({
         selected: state.selected
       }
     });
-
-    function getListClasses() {
-      return `${listBoxContainerStyles} ${listBoxStyles}`;
-    }
 
     onMounted(() => {
       // There may be a more Vue-y way to do this...but bc the refs get passed to the machine
@@ -158,7 +150,6 @@ const Select = defineComponent({
       state,
       send,
       machineState,
-      getListClasses,
       listRef,
       itemsRef,
       handleKeydownSelect,

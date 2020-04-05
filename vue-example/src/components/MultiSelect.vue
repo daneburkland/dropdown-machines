@@ -21,9 +21,7 @@
         :class="getItemClasses(decoratedItem)"
         @mousemove="() => handleMousemoveItem(decoratedItem)"
         @click="() => handleClickItem(decoratedItem)"
-      >
-        {{ decoratedItem.item.name }}
-      </li>
+      >{{ decoratedItem.item.name }}</li>
     </ul>
   </div>
 </template>
@@ -118,10 +116,6 @@ const MultiSelect = defineComponent({
       }
     });
 
-    function getListClasses() {
-      return `${listBoxContainerStyles} ${listBoxStyles}`;
-    }
-
     onMounted(() => {
       send({
         type: UPDATE_LIST_REF,
@@ -178,7 +172,6 @@ const MultiSelect = defineComponent({
       state,
       send,
       machineState,
-      getListClasses,
       listRef,
       itemsRef,
       handleRemoveSelectedItem,

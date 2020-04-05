@@ -5,9 +5,7 @@
       @keydown="handleKeydownSelect"
       @click="handleClickSelect"
       tabindex="0"
-    >
-      {{ !!state.selected ? state.selected.name : "" }}
-    </div>
+    >{{ !!state.selected ? state.selected.name : "" }}</div>
     <ul ref="listRef" :class="listClasses" v-show="isOpen()">
       <input
         ref="filterInputRef"
@@ -22,9 +20,7 @@
         :class="getItemClasses(decoratedItem)"
         @mousemove="() => handleMousemoveItem(decoratedItem)"
         @click="() => handleClickItem(decoratedItem)"
-      >
-        {{ decoratedItem.item.name }}
-      </li>
+      >{{ decoratedItem.item.name }}</li>
     </ul>
   </div>
 </template>
@@ -115,10 +111,6 @@ const FilterSelect = defineComponent({
       }
     });
 
-    function getListClasses() {
-      return `${listBoxContainerStyles} ${listBoxStyles}`;
-    }
-
     onMounted(() => {
       send({
         type: UPDATE_LIST_REF,
@@ -190,7 +182,6 @@ const FilterSelect = defineComponent({
       state,
       send,
       machineState,
-      getListClasses,
       listRef,
       filterInputRef,
       itemsRef,
