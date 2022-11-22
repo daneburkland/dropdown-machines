@@ -15,7 +15,7 @@
     "classnames": "^2.2.6",
     "react": "^16.9.23",
     "react-dom": "^16.9.23",
-    "react-scripts": "^3.0.1",
+    "react-scripts": "^5.0.1",
     "typescript": "^3.8.3",
     "dropdown-machines": "file:..",
     "xstate": "^4.8.0"
